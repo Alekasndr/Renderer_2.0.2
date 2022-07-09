@@ -1,0 +1,4 @@
+D:/programming/Renderer_2.0.2/build/CMakeFiles/ALL_BUILD.dir
+D:/programming/Renderer_2.0.2/build/CMakeFiles/ZERO_CHECK.dir
+D:/programming/Renderer_2.0.2/build/external/CMakeFiles/tinyobjloader.dir
+D:/programming/Renderer_2.0.2/build/src/CMakeFiles/src.dir
