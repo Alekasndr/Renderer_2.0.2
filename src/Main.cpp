@@ -6,17 +6,17 @@ int main(int argc, char* argv[])
 {
 	VulkanEngine engine;
 
-	engine.init();	
-	
 	try {
+		engine.init();
+
 		engine.run();
+
+		engine.cleanup();
 	}
 	catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
-
-	engine.cleanup();	
 
 	return EXIT_SUCCESS;
 }
