@@ -1,24 +1,22 @@
-// Example program:
-// Using SDL2 to create an application window
-
-#include "SDL.h"
-#include <stdio.h>
+#include <vk_engine.h>
+#include <exception>
 #include <iostream>
-#include "Vulkan.h"
 
-using namespace std;
+int main(int argc, char* argv[])
+{
+	VulkanEngine engine;
 
-int main(int argc, char* argv[]) {
-
-	Vulkan app;
-
+	engine.init();	
+	
 	try {
-		app.run();
+		engine.run();
 	}
 	catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
+
+	engine.cleanup();	
 
 	return EXIT_SUCCESS;
 }

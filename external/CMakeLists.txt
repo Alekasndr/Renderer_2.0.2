@@ -1,10 +1,14 @@
 find_package(Vulkan REQUIRED)
 
 add_library(glm INTERFACE)
+add_library(vma INTERFACE)
 
 add_library(stb_image INTERFACE)
 
 add_library(tinyobjloader STATIC)
+
+#both vma and glm and header only libs so we only need the include path
+target_include_directories(vma INTERFACE vma)
 
 target_include_directories(glm INTERFACE glm)
 
