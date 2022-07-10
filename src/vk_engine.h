@@ -2,6 +2,7 @@
 #include <vector>
 #include <optional>
 #include <string>
+#include <vk_types.h>
 #include "Vertex.h"
 #include "UniformBufferObject.h"
 
@@ -9,15 +10,14 @@ class SDL_Window;
 
 class VulkanEngine {
 public:
-	void run();
+	void initWindow();
+	void mainLoop();
+	void cleanup();
 
 private:
 	static std::vector<char> readFile(const std::string& filename);
 
-	void initWindow();
 	void initVulkan();
-	void mainLoop();
-	void cleanup();
 	void drawFrame();
 
 	void createInstance();

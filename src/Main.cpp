@@ -1,7 +1,3 @@
-// Example program:
-// Using SDL2 to create an application window
-
-#include "SDL.h"
 #include <stdio.h>
 #include <iostream>
 #include "vk_engine.h"
@@ -10,10 +6,12 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-	VulkanEngine app;
+	VulkanEngine engine;
 
 	try {
-		app.run();
+		engine.initWindow();
+		engine.mainLoop();
+		engine.cleanup();
 	}
 	catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;

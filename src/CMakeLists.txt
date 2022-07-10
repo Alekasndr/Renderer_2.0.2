@@ -1,11 +1,14 @@
 
 # Add source to this project's executable.
 add_executable (src 
-  Main.cpp
+  main.cpp
   UniformBufferObject.h
   Vertex.h
-  Vulkan.cpp
-  Vulkan.h)
+  vk_engine.cpp
+  vk_engine.h
+  vk_initializers.cpp
+  vk_initializers.h
+  vk_types.h)
 
 
 set_property(TARGET src PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:src>)

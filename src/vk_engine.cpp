@@ -27,14 +27,6 @@ void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 
-void VulkanEngine::run()
-{
-	initWindow();
-	initVulkan();
-	mainLoop();
-	cleanup();
-}
-
 std::vector<char> VulkanEngine::readFile(const std::string& filename)
 {
 	std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -67,6 +59,8 @@ void VulkanEngine::initWindow()
 		600,                               // height, in pixels
 		SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE             // flags - see below
 	);
+
+	initVulkan();
 
 	if (window == NULL) {
 		// In the case that the window could not be made...
