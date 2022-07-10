@@ -1,6 +1,11 @@
 #include "vk_engine.h"
+
 #include <SDL.h>
 #include <SDL_Vulkan.h>
+
+#include <vk_types.h>
+#include <vk_initializers.h>
+
 #include <iostream>
 #include <map>
 #include <set>
@@ -812,19 +817,13 @@ void VulkanEngine::createFramebuffers()
 
 void VulkanEngine::createCommandPool()
 {
-	VkCommandPoolCreateInfo poolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	poolInfo.queueFamilyIndex = queueIndices.graphicsFamily.value();
+	VkCommandPoolCreateInfo poolInfo = vkinit::command_pool_create_info(queueIndices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
 	if (vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to create command pool!");
 	}
 
-	VkCommandPoolCreateInfo transferPoolInfo{};
-	transferPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	transferPoolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-	transferPoolInfo.queueFamilyIndex = queueIndices.transferFamily.value();
+	VkCommandPoolCreateInfo transferPoolInfo = vkinit::command_pool_create_info(queueIndices.transferFamily.value(), VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
 
 	if (vkCreateCommandPool(device, &transferPoolInfo, nullptr, &transferCommandPool) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to create transfer command pool!");
@@ -837,11 +836,7 @@ void VulkanEngine::createCommandBuffers()
 {
 	commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
-	VkCommandBufferAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.commandPool = commandPool;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
+	VkCommandBufferAllocateInfo allocInfo = vkinit::command_buffer_allocate_info(commandPool, (uint32_t)commandBuffers.size(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
 	if (vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to allocate command buffers!");
