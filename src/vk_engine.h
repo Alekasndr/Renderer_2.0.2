@@ -7,7 +7,7 @@
 
 class SDL_Window;
 
-class Vulkan {
+class VulkanEngine {
 public:
 	void run();
 

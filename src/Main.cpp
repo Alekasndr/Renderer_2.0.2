@@ -4,13 +4,13 @@
 #include "SDL.h"
 #include <stdio.h>
 #include <iostream>
-#include "Vulkan.h"
+#include "vk_engine.h"
 
 using namespace std;
 
 int main(int argc, char* argv[]) {
 
-	Vulkan app;
+	VulkanEngine app;
 
 	try {
 		app.run();
