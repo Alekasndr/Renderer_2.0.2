@@ -60,6 +60,8 @@ public:
 	VkCommandPool commandPool; //the command pool for our commands
 	VkCommandBuffer mainCommandBuffer; //the buffer we will record into
 
+	VkRenderPass renderPass;
+	std::vector<VkFramebuffer> framebuffers;
 private:
 	// Init Vulkan
 	void initVulkan();
@@ -71,6 +73,8 @@ private:
 	// Init Vulkan
 	void initSwapChain();
 	void initCommands();
+	void initDefaultRenderPass();
+	void initFramebuffers();
 
 
 	const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
