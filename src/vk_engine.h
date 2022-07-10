@@ -15,8 +15,6 @@ public:
 	void cleanup();
 
 private:
-	static std::vector<char> readFile(const std::string& filename);
-
 	void initVulkan();
 	void drawFrame();
 
@@ -152,7 +150,7 @@ private:
 	VkDeviceMemory colorImageMemory;
 	VkImageView colorImageView;
 
-	VkShaderModule createShaderModule(const std::vector<char>& code);
+	bool loadShaderModule(const char* filePath, VkShaderModule* outShaderModule);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 	int rateDeviceSuitability(VkPhysicalDevice device);
@@ -174,6 +172,6 @@ private:
 	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 	VkFormat findDepthFormat();
 	bool hasStencilComponent(VkFormat format);
-	void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 	VkSampleCountFlagBits getMaxUsableSampleCount();
+	void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 };

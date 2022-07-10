@@ -32,25 +32,6 @@ void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 
-std::vector<char> VulkanEngine::readFile(const std::string& filename)
-{
-	std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-	if (!file.is_open()) {
-		throw std::runtime_error("Failed to open file!");
-	}
-
-	size_t fileSize = (size_t)file.tellg();
-	std::vector<char> buffer(fileSize);
-
-	file.seekg(0);
-	file.read(buffer.data(), fileSize);
-
-	file.close();
-
-	return buffer;
-}
-
 void VulkanEngine::initWindow()
 {
 	SDL_Init(SDL_INIT_VIDEO);              // Initialize SDL2
@@ -456,7 +437,7 @@ void VulkanEngine::createLogicalDevice()
 	createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
 	deviceFeatures.samplerAnisotropy = VK_TRUE;
-	deviceFeatures.sampleRateShading = VK_TRUE; 
+	deviceFeatures.sampleRateShading = VK_TRUE;
 	createInfo.pEnabledFeatures = &deviceFeatures;;
 
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
@@ -627,11 +608,22 @@ void VulkanEngine::createRenderPass()
 
 void VulkanEngine::createGraphicsPipeline()
 {
-	auto vertShaderCode = readFile("../../shaders/shader.vert.spv");
-	auto fragShaderCode = readFile("../../shaders/shader.frag.spv");
-
-	VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
-	VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+	VkShaderModule vertShaderModule;
+	if (!loadShaderModule("../../shaders/shader.vert.spv", &vertShaderModule))
+	{
+		std::cout << "VulkanEngine: Error when building vertex shader module" << std::endl;
+	}
+	else {
+		std::cout << "VulkanEngine: Vertex shader successfully loaded" << std::endl;
+	}
+	VkShaderModule fragShaderModule;
+	if (!loadShaderModule("../../shaders/shader.frag.spv", &fragShaderModule))
+	{
+		std::cout << "VulkanEngine: Error when building fragment shader module" << std::endl;
+	}
+	else {
+		std::cout << "VulkanEngine: Fragment shader successfully loaded" << std::endl;
+	}
 
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -1235,19 +1227,33 @@ void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
 	createInfo.pfnUserCallback = debugCallback;
 }
 
-VkShaderModule VulkanEngine::createShaderModule(const std::vector<char>& code)
+bool VulkanEngine::loadShaderModule(const char* filePath, VkShaderModule* outShaderModule)
 {
+	std::ifstream file(filePath, std::ios::ate | std::ios::binary);
+
+	if (!file.is_open()) {
+		throw std::runtime_error("Failed to open file!");
+	}
+
+	size_t fileSize = (size_t)file.tellg();
+	std::vector<char> buffer(fileSize);
+
+	file.seekg(0);
+	file.read(buffer.data(), fileSize);
+
+	file.close();
+
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = code.size();
-	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+	createInfo.codeSize = buffer.size();
+	createInfo.pCode = reinterpret_cast<const uint32_t*>(buffer.data());
 	VkShaderModule shaderModule;
 
 	if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to create shader module!");
 	}
-	std::cout << "VulkanEngine: Shader module seccessfully created" << std::endl;
-	return shaderModule;
+	*outShaderModule = shaderModule;
+	return true;
 }
 
 VulkanEngine::QueueFamilyIndices VulkanEngine::findQueueFamilies(VkPhysicalDevice device)
