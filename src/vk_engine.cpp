@@ -37,10 +37,9 @@ void VulkanEngine::init()
 		window_flags
 	);
 
-	//load the core Vulkan structures
 	initVulkan();
-	//create the swapchain
 	initSwapChain();
+	initCommands();
 
 	//everything went fine
 	isInitialized = true;
@@ -49,7 +48,7 @@ void VulkanEngine::init()
 void VulkanEngine::cleanup()
 {
 	if (isInitialized) {
-
+		vkDestroyCommandPool(device, commandPool, nullptr);
 
 		vkDestroySwapchainKHR(device, swapChain, nullptr);
 
@@ -301,6 +300,21 @@ void VulkanEngine::initSwapChain()
 
 	swapChainImageFormat = surfaceFormat.format;
 	swapChainExtent = extent;
+}
+
+void VulkanEngine::initCommands()
+{
+	VkCommandPoolCreateInfo commandPoolInfo = vkinit::command_pool_create_info(queueIndices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+
+	if (vkCreateCommandPool(device, &commandPoolInfo, nullptr, &commandPool) != VK_SUCCESS) {
+		throw std::runtime_error("Vulkan: Failed to create command pool!");
+	}
+
+	VkCommandBufferAllocateInfo cmdAllocInfo = vkinit::command_buffer_allocate_info(commandPool, 1);
+
+	if (vkAllocateCommandBuffers(device, &cmdAllocInfo, &mainCommandBuffer) != VK_SUCCESS) {
+		throw std::runtime_error("Vulkan: Failed to allocate command buffers!");
+	}
 }
 
 bool VulkanEngine::checkValidationLayerSupport()

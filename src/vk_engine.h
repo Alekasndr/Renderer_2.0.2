@@ -48,7 +48,7 @@ public:
 	VkSwapchainKHR swapChain;
 	std::vector<VkImage> swapChainImages;
 	VkFormat swapChainImageFormat;
-	VkExtent2D swapChainExtent = { 1700 , 900 };
+	VkExtent2D swapChainExtent = { 800 , 600 };
 	std::vector<VkImageView> swapChainImageViews;
 
 	struct SwapChainSupportDetails {
@@ -56,6 +56,9 @@ public:
 		std::vector<VkSurfaceFormatKHR> formats;
 		std::vector<VkPresentModeKHR> presentModes;
 	};
+
+	VkCommandPool commandPool; //the command pool for our commands
+	VkCommandBuffer mainCommandBuffer; //the buffer we will record into
 
 private:
 	// Init Vulkan
@@ -67,7 +70,7 @@ private:
 	void initSurface();
 	// Init Vulkan
 	void initSwapChain();
-
+	void initCommands();
 
 
 	const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
