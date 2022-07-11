@@ -5,6 +5,7 @@
 
 #include <vk_types.h>
 #include <vk_initializers.h>
+#include <vk_pipeline.h>
 
 #include <iostream>
 #include <map>
@@ -65,7 +66,11 @@ void VulkanEngine::initVulkan()
 	createImageViews();
 	createRenderPass();
 	createDescriptorSetLayout();
-	createGraphicsPipeline();
+
+	//createGraphicsPipeline();
+
+	init_pipelines();
+
 	createCommandPool();
 	createColorResources();
 	createDepthResources();
@@ -780,6 +785,64 @@ void VulkanEngine::createGraphicsPipeline()
 	std::cout << "VulkanEngine: Shader module seccessfully destroyed" << std::endl;
 }
 
+void VulkanEngine::init_pipelines()
+{
+	VkShaderModule vertShaderModule;
+	if (!loadShaderModule("../../shaders/shader.vert.spv", &vertShaderModule))
+	{
+		std::cout << "VulkanEngine: Error when building vertex shader module" << std::endl;
+	}
+	else {
+		std::cout << "VulkanEngine: Vertex shader successfully loaded" << std::endl;
+	}
+	VkShaderModule fragShaderModule;
+	if (!loadShaderModule("../../shaders/shader.frag.spv", &fragShaderModule))
+	{
+		std::cout << "VulkanEngine: Error when building fragment shader module" << std::endl;
+	}
+	else {
+		std::cout << "VulkanEngine: Fragment shader successfully loaded" << std::endl;
+	}
+
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo = vkinit::pipelineLayoutCreateInfo(&descriptorSetLayout);
+	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+		throw std::runtime_error("Vulkan: Failed to create pipeline layout!");
+	}
+
+	PipelineBuilder pipelineBuilder;
+
+	pipelineBuilder.shaderStages.push_back(
+		vkinit::pipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT, vertShaderModule));
+
+	pipelineBuilder.shaderStages.push_back(
+		vkinit::pipelineShaderStageCreateInfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragShaderModule));
+
+	pipelineBuilder.vertexInputInfo = vkinit::vertexInputStateCreateInfo(&Vertex::getBindingDescription(), Vertex::getAttributeDescriptions());
+	pipelineBuilder.inputAssembly = vkinit::inputAssemblyCreateInfo(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+
+	pipelineBuilder.viewport.x = 0.0f;
+	pipelineBuilder.viewport.y = 0.0f;
+	pipelineBuilder.viewport.width = (float)swapChainExtent.width;
+	pipelineBuilder.viewport.height = (float)swapChainExtent.height;
+	pipelineBuilder.viewport.minDepth = 0.0f;
+	pipelineBuilder.viewport.maxDepth = 1.0f;
+
+	pipelineBuilder.scissor.offset = { 0, 0 };
+	pipelineBuilder.scissor.extent = swapChainExtent;
+
+	pipelineBuilder.rasterizer = vkinit::rasterizationStateCreateInfo(VK_POLYGON_MODE_FILL);
+
+	pipelineBuilder.multisampling = vkinit::multisamplingStateCreateInfo(msaaSamples);
+
+	pipelineBuilder.depthStencil = vkinit::depthStencilStateCreateInfo();
+
+	pipelineBuilder.colorBlendAttachment = vkinit::colorBlendAttachmentState();
+
+	pipelineBuilder.pipelineLayout = pipelineLayout;
+
+	graphicsPipeline = pipelineBuilder.buildPipeline(device, renderPass, pipelineBuilder.shaderStages);
+}
+
 void VulkanEngine::createFramebuffers()
 {
 	swapChainFramebuffers.resize(swapChainImageViews.size());
@@ -809,13 +872,13 @@ void VulkanEngine::createFramebuffers()
 
 void VulkanEngine::createCommandPool()
 {
-	VkCommandPoolCreateInfo poolInfo = vkinit::command_pool_create_info(queueIndices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+	VkCommandPoolCreateInfo poolInfo = vkinit::commandPoolCreateInfo(queueIndices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
 	if (vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to create command pool!");
 	}
 
-	VkCommandPoolCreateInfo transferPoolInfo = vkinit::command_pool_create_info(queueIndices.transferFamily.value(), VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
+	VkCommandPoolCreateInfo transferPoolInfo = vkinit::commandPoolCreateInfo(queueIndices.transferFamily.value(), VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
 
 	if (vkCreateCommandPool(device, &transferPoolInfo, nullptr, &transferCommandPool) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to create transfer command pool!");
@@ -828,7 +891,7 @@ void VulkanEngine::createCommandBuffers()
 {
 	commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
-	VkCommandBufferAllocateInfo allocInfo = vkinit::command_buffer_allocate_info(commandPool, (uint32_t)commandBuffers.size(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+	VkCommandBufferAllocateInfo allocInfo = vkinit::commandBufferAllocateInfo(commandPool, (uint32_t)commandBuffers.size(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
 	if (vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to allocate command buffers!");

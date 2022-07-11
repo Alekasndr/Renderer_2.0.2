@@ -29,6 +29,9 @@ private:
 	void createImageViews();
 	void createRenderPass();
 	void createGraphicsPipeline();
+	
+	void init_pipelines();
+
 	void createFramebuffers();
 	void createCommandPool();
 	void createCommandBuffers();
