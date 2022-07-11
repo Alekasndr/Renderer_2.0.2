@@ -8,7 +8,9 @@ add_executable (src
   vk_engine.h
   vk_initializers.cpp
   vk_initializers.h
-  vk_types.h)
+  vk_types.h
+  vk_pipeline.h
+  vk_pipeline.cpp)
 
 
 set_property(TARGET src PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:src>)
