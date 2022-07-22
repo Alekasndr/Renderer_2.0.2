@@ -66,11 +66,7 @@ void VulkanEngine::initVulkan()
 	createImageViews();
 	createRenderPass();
 	createDescriptorSetLayout();
-
-	//createGraphicsPipeline();
-
 	createGraphicsPipeline();
-
 	createCommandPool();
 	createColorResources();
 	createDepthResources();
@@ -139,93 +135,11 @@ void VulkanEngine::mainLoop()
 
 void VulkanEngine::cleanup()
 {
-	std::cout << "" << std::endl;
+	vkDeviceWaitIdle(device);
 
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
-		vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
-		vkDestroyFence(device, inFlightFences[i], nullptr);
-	}
-	std::cout << "VulkanEngine: Semaphores sucessfully destroyed" << std::endl;
-
-	vkDestroyCommandPool(device, commandPool, nullptr);
-	std::cout << "VulkanEngine: Command pool sucessfully destroyed" << std::endl;
-
-	vkDestroyCommandPool(device, transferCommandPool, nullptr);
-	std::cout << "VulkanEngine: Transfer command pool sucessfully destroyed" << std::endl;
-
-
-	for (auto framebuffer : swapChainFramebuffers) {
-		vkDestroyFramebuffer(device, framebuffer, nullptr);
-	}
-	std::cout << "VulkanEngine: Framebuffer sucessfully destroyed" << std::endl;
-
-	vkDestroyImageView(device, colorImageView, nullptr);
-	std::cout << "VulkanEngine: Color image view sucessfully destroyed" << std::endl;
-	vkDestroyImage(device, colorImage, nullptr);
-	std::cout << "VulkanEngine: Color image sucessfully destroyed" << std::endl;
-	vkFreeMemory(device, colorImageMemory, nullptr);
-	std::cout << "VulkanEngine: Color image memory sucessfully free" << std::endl;
-
-	vkDestroyImageView(device, depthImageView, nullptr);
-	std::cout << "VulkanEngine: Depth image view sucessfully destroyed" << std::endl;
-	vkDestroyImage(device, depthImage, nullptr);
-	std::cout << "VulkanEngine: Depth image sucessfully destroyed" << std::endl;
-	vkFreeMemory(device, depthImageMemory, nullptr);
-	std::cout << "VulkanEngine: Depth image memory sucessfully free" << std::endl;
-
-	vkDestroyPipeline(device, graphicsPipeline, nullptr);
-	std::cout << "VulkanEngine: Graphics pipeline sucessfully destroyed" << std::endl;
-
-	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-	std::cout << "VulkanEngine: Pipeline layout sucessfully destroyed" << std::endl;
-
-	vkDestroyRenderPass(device, renderPass, nullptr);
-	std::cout << "VulkanEngine: Render pass sucessfully destroyed" << std::endl;
-
-	for (auto imageView : swapChainImageViews) {
-		vkDestroyImageView(device, imageView, nullptr);
-	}
-	std::cout << "VulkanEngine: Image views sucessfully destroyed" << std::endl;
-
-	vkDestroySwapchainKHR(device, swapChain, nullptr);
-	std::cout << "VulkanEngine: Swap chain sucessfully destroyed" << std::endl;
-
-	/// /// ///
-
-	vkDestroySampler(device, textureSampler, nullptr);
-	std::cout << "VulkanEngine: Texture sampler sucessfully destroyed" << std::endl;
-
-	vkDestroyImageView(device, textureImageView, nullptr);
-	std::cout << "VulkanEngine: Texture image view sucessfully destroyed" << std::endl;
-
-	vkDestroyImage(device, textureImage, nullptr);
-	std::cout << "VulkanEngine: Texture image sucessfully destroyed" << std::endl;
-	vkFreeMemory(device, textureImageMemory, nullptr);
-	std::cout << "VulkanEngine: Texture image memory sucessfully free" << std::endl;
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		vkDestroyBuffer(device, uniformBuffers[i], nullptr);
-		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
-	}
-	std::cout << "VulkanEngine: Uniform buffer sucessfully destroyed" << std::endl;
-	std::cout << "VulkanEngine: Uniform buffer memory sucessfully free" << std::endl;
-
-	vkDestroyDescriptorPool(device, descriptorPool, nullptr);
-	std::cout << "VulkanEngine: Descriptor pool sucessfully destroyed" << std::endl;
-
-	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
-	std::cout << "VulkanEngine: Descriptor set layout sucessfully destroyed" << std::endl;
-
-	vkDestroyBuffer(device, indexBuffer, nullptr);
-	std::cout << "VulkanEngine: Index buffer sucessfully destroyed" << std::endl;
-	vkFreeMemory(device, indexBufferMemory, nullptr);
-	std::cout << "VulkanEngine: Index buffer memory sucessfully free" << std::endl;
-
-	vkDestroyBuffer(device, vertexBuffer, nullptr);
-	std::cout << "VulkanEngine: Vertex buffer sucessfully destroyed" << std::endl;
-	vkFreeMemory(device, vertexBufferMemory, nullptr);
-	std::cout << "VulkanEngine: Vertex buffer memory sucessfully free" << std::endl;
+	afterRecreateDeletionQueue.flush();
+	recreateDeletionQueue.flush();
+	mainDeletionQueue.flush();
 
 	vkDestroyDevice(device, nullptr);
 	std::cout << "VulkanEngine: Logical device sucessfully destroyed" << std::endl;
@@ -536,6 +450,10 @@ void VulkanEngine::createSwapChain()
 	swapChainExtent = extent;
 
 	std::cout << "VulkanEngine: Swap chain seccessfully created" << std::endl;
+
+	recreateDeletionQueue.push_function([=]() {
+		vkDestroySwapchainKHR(device, swapChain, nullptr);
+		});
 }
 
 void VulkanEngine::createImageViews()
@@ -543,6 +461,10 @@ void VulkanEngine::createImageViews()
 	swapChainImageViews.resize(swapChainImages.size());
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
 		swapChainImageViews[i] = createImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+
+		recreateDeletionQueue.push_function([=]() {
+			vkDestroyImageView(device, swapChainImageViews[i], nullptr);
+			});
 	}
 	std::cout << "VulkanEngine: Image views seccessfully created" << std::endl;
 }
@@ -621,6 +543,10 @@ void VulkanEngine::createRenderPass()
 		throw std::runtime_error("VulkanEngine: Failed to create render pass!");
 	}
 	std::cout << "VulkanEngine: Render pass seccessfully created" << std::endl;
+
+	recreateDeletionQueue.push_function([=]() {
+		vkDestroyRenderPass(device, renderPass, nullptr);
+		});
 }
 
 void VulkanEngine::createGraphicsPipeline()
@@ -666,6 +592,11 @@ void VulkanEngine::createGraphicsPipeline()
 		throw std::runtime_error("VulkanEngine: Failed to create pipeline layout!");
 	}
 
+	mainDeletionQueue.push_function([=]() {
+		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+		});
+
+
 	PipelineBuilder pipelineBuilder;
 
 	pipelineBuilder.shaderStages.push_back(
@@ -699,8 +630,6 @@ void VulkanEngine::createGraphicsPipeline()
 
 	graphicsPipeline = pipelineBuilder.buildPipeline(device, renderPass);
 
-
-
 	//clear the shader stages for the builder
 	pipelineBuilder.shaderStages.clear();
 
@@ -713,6 +642,19 @@ void VulkanEngine::createGraphicsPipeline()
 
 	//build the red triangle pipeline
 	secondGraphicsPipeline = pipelineBuilder.buildPipeline(device, renderPass);
+
+	vkDestroyShaderModule(device, fragShaderModule, nullptr);
+	vkDestroyShaderModule(device, vertShaderModule, nullptr);
+	vkDestroyShaderModule(device, secondFragShaderModule, nullptr);
+	vkDestroyShaderModule(device, secondVertShaderModule, nullptr);
+	std::cout << "VulkanEngine: Shader module seccessfully destroyed" << std::endl;
+
+	mainDeletionQueue.push_function([=]() {
+		vkDestroyPipeline(device, graphicsPipeline, nullptr);
+		});
+	mainDeletionQueue.push_function([=]() {
+		vkDestroyPipeline(device, secondGraphicsPipeline, nullptr);
+		});
 }
 
 bool VulkanEngine::loadShaderModule(const char* filePath, VkShaderModule* outShaderModule)
@@ -767,6 +709,10 @@ void VulkanEngine::createFramebuffers()
 		if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
 			throw std::runtime_error("VulkanEngine: Failed to create framebuffer!");
 		}
+
+		recreateDeletionQueue.push_function([=]() {
+			vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
+			});
 	}
 	std::cout << "VulkanEngine: Framebuffer seccessfully created" << std::endl;
 }
@@ -779,11 +725,19 @@ void VulkanEngine::createCommandPool()
 		throw std::runtime_error("VulkanEngine: Failed to create command pool!");
 	}
 
+	afterRecreateDeletionQueue.push_function([=]() {
+		vkDestroyCommandPool(device, commandPool, nullptr);
+		});
+
 	VkCommandPoolCreateInfo transferPoolInfo = vkinit::commandPoolCreateInfo(queueIndices.transferFamily.value(), VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
 
 	if (vkCreateCommandPool(device, &transferPoolInfo, nullptr, &transferCommandPool) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to create transfer command pool!");
 	}
+
+	afterRecreateDeletionQueue.push_function([=]() {
+		vkDestroyCommandPool(device, transferCommandPool, nullptr);
+		});
 
 	std::cout << "VulkanEngine: Command pool seccessfully created" << std::endl;
 }
@@ -819,6 +773,16 @@ void VulkanEngine::createSyncObjects()
 			vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
 			throw std::runtime_error("VulkanEngine: Failed to create semaphores!");
 		}
+
+		afterRecreateDeletionQueue.push_function([=]() {
+			vkDestroyFence(device, inFlightFences[i], nullptr);
+			});
+		afterRecreateDeletionQueue.push_function([=]() {
+			vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
+			});
+		afterRecreateDeletionQueue.push_function([=]() {
+			vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
+			});
 	}
 	std::cout << "VulkanEngine: Semaphores seccessfully created" << std::endl;
 }
@@ -827,7 +791,7 @@ void VulkanEngine::recreateSwapChain()
 {
 	vkDeviceWaitIdle(device);
 
-	cleanupSwapChain();
+	recreateDeletionQueue.flush();
 
 	std::cout << "" << std::endl;
 
@@ -892,6 +856,14 @@ void VulkanEngine::createVertexBuffer()
 
 	vkDestroyBuffer(device, stagingBuffer, nullptr);
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+
+	mainDeletionQueue.push_function([=]() {
+		vkFreeMemory(device, vertexBufferMemory, nullptr);
+		});
+	mainDeletionQueue.push_function([=]() {
+		vkDestroyBuffer(device, vertexBuffer, nullptr);
+		});
 }
 
 void VulkanEngine::createIndexBuffer()
@@ -914,6 +886,13 @@ void VulkanEngine::createIndexBuffer()
 
 	vkDestroyBuffer(device, stagingBuffer, nullptr);
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+	mainDeletionQueue.push_function([=]() {
+		vkFreeMemory(device, indexBufferMemory, nullptr);
+		});
+	mainDeletionQueue.push_function([=]() {
+		vkDestroyBuffer(device, indexBuffer, nullptr);
+		});
 }
 
 void VulkanEngine::createUniformBuffers()
@@ -925,6 +904,13 @@ void VulkanEngine::createUniformBuffers()
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
+
+		mainDeletionQueue.push_function([=]() {
+			vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+			});
+		mainDeletionQueue.push_function([=]() {
+			vkDestroyBuffer(device, uniformBuffers[i], nullptr);
+			});
 	}
 }
 
@@ -955,6 +941,9 @@ void VulkanEngine::createDescriptorSetLayout()
 	}
 	std::cout << "VulkanEngine: Descriptor set layout sucessfully created" << std::endl;
 
+	mainDeletionQueue.push_function([=]() {
+		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+		});
 }
 
 void VulkanEngine::createDescriptorPool()
@@ -975,6 +964,11 @@ void VulkanEngine::createDescriptorPool()
 		throw std::runtime_error("VulkanEngine: Failed to create descriptor pool!");
 	}
 	std::cout << "VulkanEngine: Descriptor pool seccessfully created" << std::endl;
+
+	mainDeletionQueue.push_function([=]() {
+		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+		});
+	std::cout << "VulkanEngine: Descriptor pool sucessfully destroyed" << std::endl;
 }
 
 void VulkanEngine::createDescriptorSets()
@@ -1057,6 +1051,13 @@ void VulkanEngine::createTextureImage()
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
 
 	std::cout << "VulkanEngine: Texture image seccessfully created" << std::endl;
+
+	mainDeletionQueue.push_function([=]() {
+		vkFreeMemory(device, textureImageMemory, nullptr);
+		});
+	mainDeletionQueue.push_function([=]() {
+		vkDestroyImage(device, textureImage, nullptr);
+		});
 }
 
 void VulkanEngine::createTextureImageView()
@@ -1064,6 +1065,10 @@ void VulkanEngine::createTextureImageView()
 	textureImageView = createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels);
 
 	std::cout << "VulkanEngine: Texture image view seccessfully created" << std::endl;
+
+	mainDeletionQueue.push_function([=]() {
+		vkDestroyImageView(device, textureImageView, nullptr);
+		});
 }
 
 void VulkanEngine::createTextureSampler()
@@ -1094,6 +1099,11 @@ void VulkanEngine::createTextureSampler()
 		throw std::runtime_error("VulkanEngine: Failed to create texture sampler!");
 	}
 	std::cout << "VulkanEngine: Texture sampler seccessfully created" << std::endl;
+
+	mainDeletionQueue.push_function([=]() {
+		vkDestroySampler(device, textureSampler, nullptr);
+
+		});
 }
 
 void VulkanEngine::createDepthResources()
@@ -1104,6 +1114,17 @@ void VulkanEngine::createDepthResources()
 	depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 
 	transitionImageLayout(depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
+
+
+	recreateDeletionQueue.push_function([=]() {
+		vkFreeMemory(device, depthImageMemory, nullptr);
+		});
+	recreateDeletionQueue.push_function([=]() {
+		vkDestroyImage(device, depthImage, nullptr);
+		});
+	recreateDeletionQueue.push_function([=]() {
+		vkDestroyImageView(device, depthImageView, nullptr);
+		});
 }
 
 void VulkanEngine::loadModel()
@@ -1152,6 +1173,16 @@ void VulkanEngine::createColorResources()
 
 	createImage(swapChainExtent.width, swapChainExtent.height, 1, msaaSamples, colorFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage, colorImageMemory);
 	colorImageView = createImageView(colorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+
+	recreateDeletionQueue.push_function([=]() {
+		vkFreeMemory(device, colorImageMemory, nullptr);
+		});
+	recreateDeletionQueue.push_function([=]() {
+		vkDestroyImage(device, colorImage, nullptr);
+		});
+	recreateDeletionQueue.push_function([=]() {
+		vkDestroyImageView(device, colorImageView, nullptr);
+		});
 }
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(

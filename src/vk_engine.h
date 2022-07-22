@@ -8,6 +8,24 @@
 
 class SDL_Window;
 
+struct DeletionQueue
+{
+	std::list<std::function<void()>> deletors;
+
+	void push_function(std::function<void()>&& function) {
+		deletors.push_back(function);
+	}
+
+	void flush() {
+		// reverse iterate the deletion queue to execute all the functions
+		for (auto it = deletors.rbegin(); it != deletors.rend(); it++) {
+			(*it)(); //call the function
+		}
+
+		deletors.clear();
+	}
+};
+
 class VulkanEngine {
 public:
 	void initWindow();
@@ -155,6 +173,10 @@ private:
 	VkImageView colorImageView;
 
 	int selectedShader = 0;
+
+	DeletionQueue recreateDeletionQueue;
+	DeletionQueue mainDeletionQueue;
+	DeletionQueue afterRecreateDeletionQueue;
 
 	bool loadShaderModule(const char* filePath, VkShaderModule* outShaderModule);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
