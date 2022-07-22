@@ -28,9 +28,9 @@ private:
 	void createSwapChain();
 	void createImageViews();
 	void createRenderPass();
-	void createGraphicsPipeline();
+
 	
-	void init_pipelines();
+	void createGraphicsPipeline();
 
 	void createFramebuffers();
 	void createCommandPool();
@@ -75,6 +75,7 @@ private:
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;
+	VkPipeline secondGraphicsPipeline;
 
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 
@@ -152,6 +153,8 @@ private:
 	VkImage colorImage;
 	VkDeviceMemory colorImageMemory;
 	VkImageView colorImageView;
+
+	int selectedShader = 0;
 
 	bool loadShaderModule(const char* filePath, VkShaderModule* outShaderModule);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);

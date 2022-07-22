@@ -17,5 +17,5 @@ public:
 
 	VkPipelineLayout pipelineLayout;
 
-	VkPipeline buildPipeline(VkDevice device, VkRenderPass renderPass, std::vector<VkPipelineShaderStageCreateInfo> shaderStages);
+	VkPipeline buildPipeline(VkDevice device, VkRenderPass renderPass);
 };

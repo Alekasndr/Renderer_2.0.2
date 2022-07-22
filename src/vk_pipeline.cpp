@@ -2,7 +2,7 @@
 #include "vk_pipeline.h"
 #include <iostream>
 
-VkPipeline PipelineBuilder::buildPipeline(VkDevice device, VkRenderPass renderPass, std::vector<VkPipelineShaderStageCreateInfo> shaderStages)
+VkPipeline PipelineBuilder::buildPipeline(VkDevice device, VkRenderPass renderPass)
 {
 	VkPipelineViewportStateCreateInfo viewportState{};
 	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
