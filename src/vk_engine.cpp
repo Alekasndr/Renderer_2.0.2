@@ -626,39 +626,39 @@ void VulkanEngine::createRenderPass()
 void VulkanEngine::createGraphicsPipeline()
 {
 	VkShaderModule vertShaderModule;
-	if (!loadShaderModule("../../shaders/shader.vert.spv", &vertShaderModule))
+	if (loadShaderModule("../../shaders/shader.vert.spv", &vertShaderModule))
 	{
-		std::cout << "VulkanEngine: Error when building vertex shader module" << std::endl;
-	}
-	else {
 		std::cout << "VulkanEngine: Vertex shader successfully loaded" << std::endl;
 	}
+	else {
+		std::cout << "VulkanEngine: Error when building vertex shader module" << std::endl;
+	}
 	VkShaderModule fragShaderModule;
-	if (!loadShaderModule("../../shaders/shader.frag.spv", &fragShaderModule))
+	if (loadShaderModule("../../shaders/shader.frag.spv", &fragShaderModule))
 	{
-		std::cout << "VulkanEngine: Error when building fragment shader module" << std::endl;
+		std::cout << "VulkanEngine: Fragment shader successfully loaded" << std::endl;
 	}
 	else {
-		std::cout << "VulkanEngine: Fragment shader successfully loaded" << std::endl;
+		std::cout << "VulkanEngine: Error when building fragment shader module" << std::endl;
 	}
 
 	//compile red triangle modules
 	VkShaderModule secondVertShaderModule;
-	if (!loadShaderModule("../../shaders/shader.vert.spv", &secondVertShaderModule))
+	if (loadShaderModule("../../shaders/shader.vert.spv", &secondVertShaderModule))
 	{
-		std::cout << "VulkanEngine: Error when building vertex shader module" << std::endl;
+		std::cout << "VulkanEngine: Vertex shader successfully loaded" << std::endl;
 	}
 	else {
-		std::cout << "VulkanEngine: Vertex shader successfully loaded" << std::endl;
+		std::cout << "VulkanEngine: Error when building vertex shader module" << std::endl;
 	}
 
 	VkShaderModule secondFragShaderModule;
-	if (!loadShaderModule("../../shaders/shader1.frag.spv", &secondFragShaderModule))
+	if (loadShaderModule("../../shaders/shader1.frag.spv", &secondFragShaderModule))
 	{
-		std::cout << "VulkanEngine: Error when building fragment shader module" << std::endl;
+		std::cout << "VulkanEngine: Fragment shader successfully loaded" << std::endl;
 	}
 	else {
-		std::cout << "VulkanEngine: Fragment shader successfully loaded" << std::endl;
+		std::cout << "VulkanEngine: Error when building fragment shader module" << std::endl;
 	}
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = vkinit::pipelineLayoutCreateInfo(&descriptorSetLayout);
