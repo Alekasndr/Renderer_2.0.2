@@ -806,7 +806,7 @@ void VulkanEngine::init_pipelines()
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = vkinit::pipelineLayoutCreateInfo(&descriptorSetLayout);
 	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
-		throw std::runtime_error("Vulkan: Failed to create pipeline layout!");
+		throw std::runtime_error("VulkanEngine: Failed to create pipeline layout!");
 	}
 
 	PipelineBuilder pipelineBuilder;

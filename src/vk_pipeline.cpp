@@ -54,12 +54,13 @@ VkPipeline PipelineBuilder::buildPipeline(VkDevice device, VkRenderPass renderPa
 	//it's easy to error out on create graphics pipeline, so we handle it a bit better than the common VK_CHECK case
 	VkPipeline newPipeline;
 
+
 	if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &newPipeline) != VK_SUCCESS) {
-		throw std::runtime_error("Vulkan: Failed to create graphics pipeline!");
+		throw std::runtime_error("VulkanEngine: Failed to create graphics pipeline!");
 		return VK_NULL_HANDLE; // failed to create graphics pipeline
 	}
 	else {
-		std::cout << "Vulkan: Graphics pipeline seccessfully created" << std::endl;
+		std::cout << "VulkanEngine: Graphics pipeline seccessfully created" << std::endl;
 		return newPipeline;
 	}
 }
