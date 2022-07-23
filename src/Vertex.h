@@ -46,6 +46,11 @@ struct Vertex {
     }
 };
 
+struct Mesh {
+    std::vector<Vertex> _vertices;
+
+};
+
 namespace std {
     template<> struct hash<Vertex> {
         size_t operator()(Vertex const& vertex) const {

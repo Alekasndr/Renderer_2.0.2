@@ -3,7 +3,7 @@
 #include <optional>
 #include <string>
 #include <vk_types.h>
-#include "Vertex.h"
+#include <vk_mesh.h>
 #include "UniformBufferObject.h"
 
 class SDL_Window;
