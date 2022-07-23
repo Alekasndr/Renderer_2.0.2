@@ -3,7 +3,6 @@
 add_executable (src 
   main.cpp
   UniformBufferObject.h
-  Vertex.h
   vk_engine.cpp
   vk_engine.h
   vk_initializers.cpp
