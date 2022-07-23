@@ -838,7 +838,7 @@ void VulkanEngine::cleanupSwapChain()
 
 void VulkanEngine::createVertexBuffer()
 {
-	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+	VkDeviceSize bufferSize = sizeof(mesh.vertices[0]) * mesh.vertices.size();
 
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
@@ -846,29 +846,27 @@ void VulkanEngine::createVertexBuffer()
 
 	void* data;
 	vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, vertices.data(), (size_t)bufferSize);
+	memcpy(data, mesh.vertices.data(), (size_t)bufferSize);
 	vkUnmapMemory(device, stagingBufferMemory);
 
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mesh.vertexBuffer, mesh.vertexBufferMemory);
 	std::cout << "VulkanEngine: Vertex buffer sucessfully created" << std::endl;
 
-	copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+	copyBuffer(stagingBuffer, mesh.vertexBuffer, bufferSize);
 
 	vkDestroyBuffer(device, stagingBuffer, nullptr);
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
 
 
 	mainDeletionQueue.push_function([=]() {
-		vkFreeMemory(device, vertexBufferMemory, nullptr);
-		});
-	mainDeletionQueue.push_function([=]() {
-		vkDestroyBuffer(device, vertexBuffer, nullptr);
+		vkFreeMemory(device, mesh.vertexBufferMemory, nullptr);
+		vkDestroyBuffer(device, mesh.vertexBuffer, nullptr);
 		});
 }
 
 void VulkanEngine::createIndexBuffer()
 {
-	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+	VkDeviceSize bufferSize = sizeof(mesh.indices[0]) * mesh.indices.size();
 
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
@@ -876,22 +874,20 @@ void VulkanEngine::createIndexBuffer()
 
 	void* data;
 	vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, indices.data(), (size_t)bufferSize);
+	memcpy(data, mesh.indices.data(), (size_t)bufferSize);
 	vkUnmapMemory(device, stagingBufferMemory);
 
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mesh.indexBuffer, mesh.indexBufferMemory);
 	std::cout << "VulkanEngine: Index buffer sucessfully created" << std::endl;
 
-	copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+	copyBuffer(stagingBuffer, mesh.indexBuffer, bufferSize);
 
 	vkDestroyBuffer(device, stagingBuffer, nullptr);
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
 
 	mainDeletionQueue.push_function([=]() {
-		vkFreeMemory(device, indexBufferMemory, nullptr);
-		});
-	mainDeletionQueue.push_function([=]() {
-		vkDestroyBuffer(device, indexBuffer, nullptr);
+		vkFreeMemory(device, mesh.indexBufferMemory, nullptr);
+		vkDestroyBuffer(device, mesh.indexBuffer, nullptr);
 		});
 }
 
@@ -1158,11 +1154,11 @@ void VulkanEngine::loadModel()
 			vertex.color = { 1.0f, 1.0f, 1.0f };
 
 			if (uniqueVertices.count(vertex) == 0) {
-				uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-				vertices.push_back(vertex);
+				uniqueVertices[vertex] = static_cast<uint32_t>(mesh.vertices.size());
+				mesh.vertices.push_back(vertex);
 			}
 
-			indices.push_back(uniqueVertices[vertex]);
+			mesh.indices.push_back(uniqueVertices[vertex]);
 		}
 	}
 }
@@ -1415,14 +1411,14 @@ void VulkanEngine::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t i
 	scissor.extent = swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	VkBuffer vertexBuffers[] = { vertexBuffer };
+	VkBuffer vertexBuffers[] = { mesh.vertexBuffer };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+	vkCmdBindIndexBuffer(commandBuffer, mesh.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
 	vkCmdEndRenderPass(commandBuffer);
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to record command buffer!");

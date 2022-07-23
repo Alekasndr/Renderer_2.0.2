@@ -5,6 +5,13 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
+struct VertexInputDescription {
+
+    std::vector<VkVertexInputBindingDescription> bindings;
+    std::vector<VkVertexInputAttributeDescription> attributes;
+
+    VkPipelineVertexInputStateCreateFlags flags = 0;
+};
 
 struct Vertex {
     glm::vec3 pos;
@@ -55,3 +62,15 @@ namespace std {
         }
     };
 }
+
+
+struct Mesh {
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
+
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
+};

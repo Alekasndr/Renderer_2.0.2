@@ -101,12 +101,6 @@ private:
 	VkCommandPool transferCommandPool;
 	std::vector<VkCommandBuffer> commandBuffers;
 
-	VkBuffer vertexBuffer;
-	VkDeviceMemory vertexBufferMemory;
-
-	VkBuffer indexBuffer;
-	VkDeviceMemory indexBufferMemory;
-
 	std::vector<VkBuffer> uniformBuffers;
 	std::vector<VkDeviceMemory> uniformBuffersMemory;
 
@@ -158,9 +152,6 @@ private:
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
-	std::vector<Vertex> vertices;
-	std::vector<uint32_t> indices;
-
 	const uint32_t WIDTH = 800;
 	const uint32_t HEIGHT = 600;
 
@@ -177,6 +168,8 @@ private:
 	DeletionQueue recreateDeletionQueue;
 	DeletionQueue mainDeletionQueue;
 	DeletionQueue afterRecreateDeletionQueue;
+
+	Mesh mesh;
 
 	bool loadShaderModule(const char* filePath, VkShaderModule* outShaderModule);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
