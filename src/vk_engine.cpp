@@ -592,10 +592,6 @@ void VulkanEngine::createGraphicsPipeline()
 		throw std::runtime_error("VulkanEngine: Failed to create pipeline layout!");
 	}
 
-	mainDeletionQueue.push_function([=]() {
-		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-		});
-
 
 	PipelineBuilder pipelineBuilder;
 
@@ -605,7 +601,8 @@ void VulkanEngine::createGraphicsPipeline()
 	pipelineBuilder.shaderStages.push_back(
 		vkinit::pipelineShaderStageCreateInfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragShaderModule));
 
-	pipelineBuilder.vertexInputInfo = vkinit::vertexInputStateCreateInfo(&Vertex::getBindingDescription(), Vertex::getAttributeDescriptions());
+	VertexInputDescription vertexInputDescription = Vertex::getVertexDescription();
+	pipelineBuilder.vertexInputInfo = vkinit::vertexInputStateCreateInfo(vertexInputDescription.bindings, vertexInputDescription.attributes);
 	pipelineBuilder.inputAssembly = vkinit::inputAssemblyCreateInfo(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 
 	pipelineBuilder.viewport.x = 0.0f;
@@ -650,9 +647,8 @@ void VulkanEngine::createGraphicsPipeline()
 	std::cout << "VulkanEngine: Shader module seccessfully destroyed" << std::endl;
 
 	mainDeletionQueue.push_function([=]() {
+		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 		vkDestroyPipeline(device, graphicsPipeline, nullptr);
-		});
-	mainDeletionQueue.push_function([=]() {
 		vkDestroyPipeline(device, secondGraphicsPipeline, nullptr);
 		});
 }
@@ -903,8 +899,6 @@ void VulkanEngine::createUniformBuffers()
 
 		mainDeletionQueue.push_function([=]() {
 			vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
-			});
-		mainDeletionQueue.push_function([=]() {
 			vkDestroyBuffer(device, uniformBuffers[i], nullptr);
 			});
 	}
@@ -1050,8 +1044,6 @@ void VulkanEngine::createTextureImage()
 
 	mainDeletionQueue.push_function([=]() {
 		vkFreeMemory(device, textureImageMemory, nullptr);
-		});
-	mainDeletionQueue.push_function([=]() {
 		vkDestroyImage(device, textureImage, nullptr);
 		});
 }
@@ -1098,7 +1090,6 @@ void VulkanEngine::createTextureSampler()
 
 	mainDeletionQueue.push_function([=]() {
 		vkDestroySampler(device, textureSampler, nullptr);
-
 		});
 }
 
