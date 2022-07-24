@@ -181,7 +181,7 @@ void VulkanEngine::drawFrame()
 
 	recordCommandBuffer(commandBuffers[currentFrame], currentFrame);
 
-	
+
 	/// <summary>
 	/// 
 	/// </summary>
@@ -1111,10 +1111,12 @@ void VulkanEngine::createDepthResources()
 
 void VulkanEngine::loadModel()
 {
-	mesh.load_from_obj(MODEL_PATH.c_str());
+	_mesh.load_from_obj(MODEL_PATH.c_str());
 
-	createVertexBuffer(mesh);
-	createIndexBuffer(mesh);
+	createVertexBuffer(_mesh);
+	createIndexBuffer(_mesh);
+
+	_meshes["monkey"] = _mesh;
 }
 
 void VulkanEngine::createColorResources()
@@ -1378,7 +1380,22 @@ void VulkanEngine::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t i
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	updateUniformBuffer(commandBuffer, imageIndex);
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.x = 0.0f;
+	viewport.width = swapChainExtent.width;
+	viewport.height = swapChainExtent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+	VkRect2D scissor;
+	scissor.offset = { 0,0 };
+	scissor.extent = swapChainExtent;
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+
+	updateUniformBuffer(commandBuffer, imageIndex, _renderables.data(), _renderables.size());
 
 	vkCmdEndRenderPass(commandBuffer);
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
@@ -1469,9 +1486,9 @@ void VulkanEngine::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSi
 	vkFreeCommandBuffers(device, transferCommandPool, 1, &commandBuffer);
 }
 
-void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t currentImage)
+void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t currentImage, RenderObject* first, int count)
 {
-	
+
 	static auto startTime = std::chrono::high_resolution_clock::now();
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
@@ -1488,38 +1505,32 @@ void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t c
 
 
 
-	if (selectedShader == 0)
+	Mesh* lastMesh = nullptr;
+	Material* lastMaterial = nullptr;
+	for (int i = 0; i < count; i++)
 	{
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+		RenderObject& object = first[i];
+
+		//only bind the pipeline if it doesn't match with the already bound one
+		if (object.material != lastMaterial) {
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipeline);
+			lastMaterial = object.material;
+		}
+
+
+		//only bind the mesh if it's a different one from last bind
+		if (object.mesh != lastMesh) {
+			VkBuffer vertexBuffers[] = {  object.mesh->vertexBuffer };
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+			vkCmdBindIndexBuffer(commandBuffer, object.mesh->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+		}
+
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentImage], 0, nullptr);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
+
 	}
-	else
-	{
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, secondGraphicsPipeline);
-	}
-
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.x = 0.0f;
-	viewport.width = swapChainExtent.width;
-	viewport.height = swapChainExtent.height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-	VkRect2D scissor;
-	scissor.offset = { 0,0 };
-	scissor.extent = swapChainExtent;
-	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-	VkBuffer vertexBuffers[] = { mesh.vertexBuffer };
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
-	vkCmdBindIndexBuffer(commandBuffer, mesh.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
-
 
 	void* data;
 	vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);

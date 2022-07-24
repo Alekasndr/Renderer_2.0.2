@@ -213,7 +213,7 @@ private:
 	DeletionQueue mainDeletionQueue;
 	DeletionQueue afterRecreateDeletionQueue;
 
-	Mesh mesh;
+	Mesh _mesh;
 
 	bool loadShaderModule(const char* filePath, VkShaderModule* outShaderModule);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
@@ -227,7 +227,7 @@ private:
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-	void updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t currentImage);
+	void updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t currentImage, RenderObject* first, int count);
 	void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
