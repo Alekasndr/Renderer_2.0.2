@@ -620,7 +620,7 @@ void VulkanEngine::createGraphicsPipeline()
 
 	pipelineBuilder.multisampling = vkinit::multisamplingStateCreateInfo(msaaSamples);
 
-	pipelineBuilder.depthStencil = vkinit::depthStencilStateCreateInfo();
+	pipelineBuilder.depthStencil = vkinit::depthStencilStateCreateInfo(true, true, VK_COMPARE_OP_LESS_OR_EQUAL);
 
 	pipelineBuilder.colorBlendAttachment = vkinit::colorBlendAttachmentState();
 
@@ -1476,20 +1476,7 @@ void VulkanEngine::updateUniformBuffer(uint32_t currentImage)
 
 void VulkanEngine::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
 {
-	VkImageCreateInfo imageInfo{};
-	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	imageInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageInfo.extent.width = width;
-	imageInfo.extent.height = height;
-	imageInfo.extent.depth = 1;
-	imageInfo.mipLevels = mipLevels;
-	imageInfo.arrayLayers = 1;
-	imageInfo.format = format;
-	imageInfo.tiling = tiling;
-	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	imageInfo.usage = usage;
-	imageInfo.samples = numSamples;
-	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	VkImageCreateInfo imageInfo = vkinit::imageCreateInfo(width, height, mipLevels, numSamples, format, tiling, usage);
 
 	if (vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to create image!");
@@ -1648,16 +1635,7 @@ void VulkanEngine::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t wi
 
 VkImageView VulkanEngine::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
 {
-	VkImageViewCreateInfo viewInfo{};
-	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	viewInfo.image = image;
-	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	viewInfo.format = format;
-	viewInfo.subresourceRange.aspectMask = aspectFlags;
-	viewInfo.subresourceRange.baseMipLevel = 0;
-	viewInfo.subresourceRange.levelCount = mipLevels;
-	viewInfo.subresourceRange.baseArrayLayer = 0;
-	viewInfo.subresourceRange.layerCount = 1;
+	VkImageViewCreateInfo viewInfo = vkinit::imageviewCreateInfo(image, format, aspectFlags, mipLevels);
 
 	VkImageView imageView;
 	if (vkCreateImageView(device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) {

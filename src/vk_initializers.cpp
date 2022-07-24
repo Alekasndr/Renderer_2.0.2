@@ -93,13 +93,13 @@ VkPipelineMultisampleStateCreateInfo vkinit::multisamplingStateCreateInfo(VkSamp
 	return multisampling;
 }
 
-VkPipelineDepthStencilStateCreateInfo vkinit::depthStencilStateCreateInfo()
+VkPipelineDepthStencilStateCreateInfo vkinit::depthStencilStateCreateInfo(bool bDepthTest, bool bDepthWrite, VkCompareOp compareOp)
 {
 	VkPipelineDepthStencilStateCreateInfo depthStencil{};
 	depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-	depthStencil.depthTestEnable = VK_TRUE;
-	depthStencil.depthWriteEnable = VK_TRUE;
-	depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+	depthStencil.depthTestEnable = bDepthTest ? VK_TRUE : VK_FALSE;
+	depthStencil.depthWriteEnable = bDepthWrite ? VK_TRUE : VK_FALSE;
+	depthStencil.depthCompareOp = bDepthTest ? compareOp : VK_COMPARE_OP_ALWAYS;
 	depthStencil.depthBoundsTestEnable = VK_FALSE;
 	depthStencil.minDepthBounds = 0.0f; // Optional
 	depthStencil.maxDepthBounds = 1.0f; // Optional
@@ -132,6 +132,42 @@ VkPipelineLayoutCreateInfo vkinit::pipelineLayoutCreateInfo(VkDescriptorSetLayou
 	pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
 	return pipelineLayoutInfo;
+}
+
+VkImageCreateInfo vkinit::imageCreateInfo(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage)
+{
+	VkImageCreateInfo imageInfo{};
+	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageInfo.extent.width = width;
+	imageInfo.extent.height = height;
+	imageInfo.extent.depth = 1;
+	imageInfo.mipLevels = mipLevels;
+	imageInfo.arrayLayers = 1;
+	imageInfo.format = format;
+	imageInfo.tiling = tiling;
+	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	imageInfo.usage = usage;
+	imageInfo.samples = numSamples;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	return imageInfo;
+}
+
+VkImageViewCreateInfo vkinit::imageviewCreateInfo(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
+{
+	VkImageViewCreateInfo viewInfo{};
+	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	viewInfo.image = image;
+	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	viewInfo.format = format;
+	viewInfo.subresourceRange.aspectMask = aspectFlags;
+	viewInfo.subresourceRange.baseMipLevel = 0;
+	viewInfo.subresourceRange.levelCount = mipLevels;
+	viewInfo.subresourceRange.baseArrayLayer = 0;
+	viewInfo.subresourceRange.layerCount = 1;
+
+	return viewInfo;
 }
 
 

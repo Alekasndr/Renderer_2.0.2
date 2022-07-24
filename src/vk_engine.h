@@ -56,7 +56,6 @@ private:
 	void createImageViews();
 	void createRenderPass();
 
-	
 	void createGraphicsPipeline();
 
 	void createFramebuffers();
