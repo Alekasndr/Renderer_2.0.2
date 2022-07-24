@@ -35,6 +35,11 @@ struct UniformBufferObject {
 	alignas(16) glm::mat4 proj;
 };
 
+struct MeshPushConstants {
+	alignas(16) glm::vec4 data;
+	alignas(16) glm::mat4 render_matrix;
+};
+
 class VulkanEngine {
 public:
 	void initWindow();
@@ -56,7 +61,7 @@ private:
 	void createImageViews();
 	void createRenderPass();
 
-	
+
 	void createGraphicsPipeline();
 
 	void createFramebuffers();
@@ -179,7 +184,9 @@ private:
 	DeletionQueue afterRecreateDeletionQueue;
 
 	Mesh mesh;
+	MeshPushConstants constants;
 
+	void updatePush(uint32_t _frameNumber);
 	bool loadShaderModule(const char* filePath, VkShaderModule* outShaderModule);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);

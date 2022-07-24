@@ -15,5 +15,5 @@ namespace vkinit {
 	VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo();
 	VkPipelineColorBlendAttachmentState colorBlendAttachmentState();
 
-	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo(VkDescriptorSetLayout* descriptorSetLayout);
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo(VkDescriptorSetLayout* descriptorSetLayout, VkPushConstantRange vk);
 }

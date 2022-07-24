@@ -123,13 +123,13 @@ VkPipelineColorBlendAttachmentState vkinit::colorBlendAttachmentState() {
 	return colorBlendAttachment;
 }
 
-VkPipelineLayoutCreateInfo vkinit::pipelineLayoutCreateInfo(VkDescriptorSetLayout* descriptorSetLayout) {
+VkPipelineLayoutCreateInfo vkinit::pipelineLayoutCreateInfo(VkDescriptorSetLayout* descriptorSetLayout, VkPushConstantRange vk) {
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = 1;
 	pipelineLayoutInfo.pSetLayouts = descriptorSetLayout;
-	pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-	pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+	pipelineLayoutInfo.pushConstantRangeCount = 1; // Optional
+	pipelineLayoutInfo.pPushConstantRanges = &vk; // Optional
 
 	return pipelineLayoutInfo;
 }
