@@ -76,13 +76,13 @@ void VulkanEngine::initVulkan()
 	createTextureImageView();
 	createTextureSampler();
 	loadModel();
-	createVertexBuffer();
-	createIndexBuffer();
 	createUniformBuffers();
 	createDescriptorPool();
 	createDescriptorSets();
 	createCommandBuffers();
 	createSyncObjects();
+
+	init_scene();
 }
 
 void VulkanEngine::mainLoop()
@@ -178,9 +178,10 @@ void VulkanEngine::drawFrame()
 	vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
 	vkResetCommandBuffer(commandBuffers[currentFrame], 0);
-	recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
 
-	updateUniformBuffer(currentFrame);
+	recordCommandBuffer(commandBuffers[currentFrame], currentFrame);
+
+	
 	/// <summary>
 	/// 
 	/// </summary>
@@ -628,6 +629,8 @@ void VulkanEngine::createGraphicsPipeline()
 
 	graphicsPipeline = pipelineBuilder.buildPipeline(device, renderPass);
 
+	create_material(graphicsPipeline, pipelineLayout, "defaultmesh");
+
 	//clear the shader stages for the builder
 	pipelineBuilder.shaderStages.clear();
 
@@ -829,7 +832,7 @@ void VulkanEngine::cleanupSwapChain()
 	std::cout << "VulkanEngine: Swap chain sucessfully destroyed" << std::endl;
 }
 
-void VulkanEngine::createVertexBuffer()
+void VulkanEngine::createVertexBuffer(Mesh& mesh)
 {
 	VkDeviceSize bufferSize = sizeof(mesh.vertices[0]) * mesh.vertices.size();
 
@@ -857,7 +860,7 @@ void VulkanEngine::createVertexBuffer()
 		});
 }
 
-void VulkanEngine::createIndexBuffer()
+void VulkanEngine::createIndexBuffer(Mesh& mesh)
 {
 	VkDeviceSize bufferSize = sizeof(mesh.indices[0]) * mesh.indices.size();
 
@@ -1109,6 +1112,9 @@ void VulkanEngine::createDepthResources()
 void VulkanEngine::loadModel()
 {
 	mesh.load_from_obj(MODEL_PATH.c_str());
+
+	createVertexBuffer(mesh);
+	createIndexBuffer(mesh);
 }
 
 void VulkanEngine::createColorResources()
@@ -1123,6 +1129,46 @@ void VulkanEngine::createColorResources()
 		vkDestroyImage(device, colorImage, nullptr);
 		vkDestroyImageView(device, colorImageView, nullptr);
 		});
+}
+
+void VulkanEngine::init_scene()
+{
+	RenderObject monkey;
+	monkey.mesh = get_mesh("monkey");
+	monkey.material = get_material("defaultmesh");
+
+	_renderables.push_back(monkey);
+}
+
+Material* VulkanEngine::create_material(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name)
+{
+	Material mat;
+	mat.pipeline = pipeline;
+	mat.pipelineLayout = layout;
+	_materials[name] = mat;
+	return &_materials[name];
+}
+
+Material* VulkanEngine::get_material(const std::string& name)
+{
+	auto it = _materials.find(name);
+	if (it == _materials.end()) {
+		return nullptr;
+	}
+	else {
+		return &(*it).second;
+	}
+}
+
+Mesh* VulkanEngine::get_mesh(const std::string& name)
+{
+	auto it = _meshes.find(name);
+	if (it == _meshes.end()) {
+		return nullptr;
+	}
+	else {
+		return &(*it).second;
+	}
 }
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -1332,37 +1378,8 @@ void VulkanEngine::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t i
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	if (selectedShader == 0)
-	{
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-	}
-	else
-	{
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, secondGraphicsPipeline);
-	}
+	updateUniformBuffer(commandBuffer, imageIndex);
 
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.x = 0.0f;
-	viewport.width = swapChainExtent.width;
-	viewport.height = swapChainExtent.height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-	VkRect2D scissor;
-	scissor.offset = { 0,0 };
-	scissor.extent = swapChainExtent;
-	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-	VkBuffer vertexBuffers[] = { mesh.vertexBuffer };
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
-	vkCmdBindIndexBuffer(commandBuffer, mesh.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
 	vkCmdEndRenderPass(commandBuffer);
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to record command buffer!");
@@ -1452,8 +1469,9 @@ void VulkanEngine::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSi
 	vkFreeCommandBuffers(device, transferCommandPool, 1, &commandBuffer);
 }
 
-void VulkanEngine::updateUniformBuffer(uint32_t currentImage)
+void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t currentImage)
 {
+	
 	static auto startTime = std::chrono::high_resolution_clock::now();
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
@@ -1467,6 +1485,41 @@ void VulkanEngine::updateUniformBuffer(uint32_t currentImage)
 	ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
 
 	ubo.proj[1][1] *= -1;
+
+
+
+	if (selectedShader == 0)
+	{
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+	}
+	else
+	{
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, secondGraphicsPipeline);
+	}
+
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.x = 0.0f;
+	viewport.width = swapChainExtent.width;
+	viewport.height = swapChainExtent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+	VkRect2D scissor;
+	scissor.offset = { 0,0 };
+	scissor.extent = swapChainExtent;
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+	VkBuffer vertexBuffers[] = { mesh.vertexBuffer };
+	VkDeviceSize offsets[] = { 0 };
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+	vkCmdBindIndexBuffer(commandBuffer, mesh.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
+
 
 	void* data;
 	vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);

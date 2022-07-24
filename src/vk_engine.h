@@ -35,6 +35,17 @@ struct UniformBufferObject {
 	alignas(16) glm::mat4 proj;
 };
 
+struct Material {
+	VkPipeline pipeline;
+	VkPipelineLayout pipelineLayout;
+};
+
+struct RenderObject {
+	Mesh* mesh;
+	Material* material;
+
+};
+
 class VulkanEngine {
 public:
 	void initWindow();
@@ -64,8 +75,10 @@ private:
 	void createSyncObjects();
 	void recreateSwapChain();
 	void cleanupSwapChain();
-	void createVertexBuffer();
-	void createIndexBuffer();
+
+	void createVertexBuffer(Mesh& mesh);
+	void createIndexBuffer(Mesh& mesh);
+
 	void createUniformBuffers();
 	void createDescriptorSetLayout();
 	void createDescriptorPool();
@@ -76,6 +89,29 @@ private:
 	void createDepthResources();
 	void loadModel();
 	void createColorResources();
+
+	void init_scene();
+
+
+	std::vector<RenderObject> _renderables;
+
+	std::unordered_map<std::string, Material> _materials;
+	std::unordered_map<std::string, Mesh> _meshes;
+	//functions
+
+	//create material and add it to the map
+	Material* create_material(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name);
+
+	//returns nullptr if it can't be found
+	Material* get_material(const std::string& name);
+
+	//returns nullptr if it can't be found
+	Mesh* get_mesh(const std::string& name);
+
+	//our draw function
+	void draw_objects(VkCommandBuffer cmd, RenderObject* first, int count);
+
+
 
 	SDL_Window* window;
 
@@ -191,7 +227,7 @@ private:
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-	void updateUniformBuffer(uint32_t currentImage);
+	void updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t currentImage);
 	void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
