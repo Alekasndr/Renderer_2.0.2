@@ -95,6 +95,11 @@ void VulkanEngine::mainLoop()
 	uint64_t frame_counter = 0;
 	uint64_t fps = 0;
 
+	int temp = 0;
+	uint64_t avrFps = 0;
+
+	int i = 0;
+
 	while (running) {
 		while (SDL_PollEvent(&event))
 		{
@@ -124,8 +129,22 @@ void VulkanEngine::mainLoop()
 		if (last_time + std::chrono::seconds(1) < timer.now()) {
 			last_time = timer.now();
 			fps = frame_counter;
+
+			temp++;
+			avrFps += fps;
+			if (temp == 60) {
+				temp = 0;
+				uint64_t data = avrFps / 60;
+				std::cout << "" << std::endl;
+				std::cout << "" << std::endl;
+				std::cout << data << std::endl;
+				std::cout << "" << std::endl;
+				std::cout << "" << std::endl;
+				avrFps = 0;
+			}
+
+
 			frame_counter = 0;
-			std::cout << "FPS:" << fps << std::endl;
 		}
 
 		drawFrame();
