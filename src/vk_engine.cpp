@@ -1140,6 +1140,12 @@ void VulkanEngine::init_scene()
 	monkey.material = get_material("defaultmesh");
 
 	_renderables.push_back(monkey);
+
+	RenderObject monkey2;
+	monkey2.mesh = get_mesh("monkey");
+	monkey2.material = get_material("defaultmesh");
+
+	_renderables.push_back(monkey2);
 }
 
 Material* VulkanEngine::create_material(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name)
@@ -1503,8 +1509,6 @@ void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t c
 
 	ubo.proj[1][1] *= -1;
 
-
-
 	Mesh* lastMesh = nullptr;
 	Material* lastMaterial = nullptr;
 	for (int i = 0; i < count; i++)
@@ -1516,7 +1520,6 @@ void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t c
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipeline);
 			lastMaterial = object.material;
 		}
-
 
 		//only bind the mesh if it's a different one from last bind
 		if (object.mesh != lastMesh) {
@@ -1531,7 +1534,6 @@ void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t c
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
 
 	}
-
 	void* data;
 	vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
 	memcpy(data, &ubo, sizeof(ubo));

@@ -199,8 +199,8 @@ private:
 	const uint32_t WIDTH = 800;
 	const uint32_t HEIGHT = 600;
 
-	const std::string MODEL_PATH = "../../models/viking_room.obj";
-	const std::string TEXTURE_PATH = "../../models/viking_room.png";
+	const std::string MODEL_PATH = "../../models/monkey_smooth.obj";
+	const std::string TEXTURE_PATH = "../../models/123.jpg";
 
 	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 	VkImage colorImage;
