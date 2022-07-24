@@ -1,5 +1,4 @@
 #include <vk_types.h>
-#include <vector>
 
 class PipelineBuilder {
 public:

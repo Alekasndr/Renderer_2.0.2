@@ -1,4 +1,4 @@
-#include "vk_engine.h"
+#include <vk_engine.h>
 
 #include <SDL.h>
 #include <SDL_Vulkan.h>
@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <map>
+#include <array>
 #include <set>
 #include <algorithm>
 #include <fstream>

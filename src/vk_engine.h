@@ -1,10 +1,13 @@
 #pragma once
-#include <vector>
 #include <optional>
 #include <string>
 #include <vk_types.h>
 #include <vk_mesh.h>
-#include "UniformBufferObject.h"
+
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#include <glm/glm.hpp>
+
 
 class SDL_Window;
 
@@ -24,6 +27,12 @@ struct DeletionQueue
 
 		deletors.clear();
 	}
+};
+
+struct UniformBufferObject {
+	alignas(16) glm::mat4 model;
+	alignas(16) glm::mat4 view;
+	alignas(16) glm::mat4 proj;
 };
 
 class VulkanEngine {

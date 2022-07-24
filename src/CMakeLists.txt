@@ -2,7 +2,6 @@
 # Add source to this project's executable.
 add_executable (src 
   main.cpp
-  UniformBufferObject.h
   vk_engine.cpp
   vk_engine.h
   vk_initializers.cpp

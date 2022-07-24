@@ -11,21 +11,18 @@ VertexInputDescription Vertex::getVertexDescription()
 
 	description.bindings.push_back(bindingDescription);
 
-	//Position will be stored at Location 0
 	VkVertexInputAttributeDescription positionAttribute = {};
 	positionAttribute.binding = 0;
 	positionAttribute.location = 0;
 	positionAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
 	positionAttribute.offset = offsetof(Vertex, pos);
 
-	//Normal will be stored at Location 1
 	VkVertexInputAttributeDescription colorAttribute = {};
 	colorAttribute.binding = 0;
 	colorAttribute.location = 1;
 	colorAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
 	colorAttribute.offset = offsetof(Vertex, color);
 
-	//Color will be stored at Location 2
 	VkVertexInputAttributeDescription texCoordAttribute = {};
 	texCoordAttribute.binding = 0;
 	texCoordAttribute.location = 2;
