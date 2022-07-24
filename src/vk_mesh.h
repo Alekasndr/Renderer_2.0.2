@@ -37,6 +37,8 @@ struct Mesh {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
+    bool load_from_obj(const char* filename);
+
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
 
