@@ -49,6 +49,7 @@ struct RenderObject {
 	Mesh* mesh;
 	Material* material;
 
+	glm::mat4 transformMatrix;
 };
 
 class VulkanEngine {
@@ -95,7 +96,7 @@ private:
 	void loadModel();
 	void createColorResources();
 
-	void init_scene();
+	void initScene();
 
 
 	std::vector<RenderObject> _renderables;
@@ -214,7 +215,6 @@ private:
 	DeletionQueue afterRecreateDeletionQueue;
 
 	Mesh _mesh;
-	MeshPushConstants _constants;
 
 	bool loadShaderModule(const char* filePath, VkShaderModule* outShaderModule);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
@@ -228,7 +228,7 @@ private:
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-	void updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t currentImage, RenderObject* first, int count);
+	void updateScene(VkCommandBuffer commandBuffer, uint32_t currentImage, RenderObject* first, int count);
 	void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);

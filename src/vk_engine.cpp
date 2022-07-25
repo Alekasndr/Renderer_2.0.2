@@ -82,7 +82,7 @@ void VulkanEngine::initVulkan()
 	createCommandBuffers();
 	createSyncObjects();
 
-	init_scene();
+	initScene();
 }
 
 void VulkanEngine::mainLoop()
@@ -1139,19 +1139,21 @@ void VulkanEngine::createColorResources()
 		});
 }
 
-void VulkanEngine::init_scene()
+void VulkanEngine::initScene()
 {
-	RenderObject monkey;
-	monkey.mesh = get_mesh("monkey");
-	monkey.material = get_material("defaultmesh");
+	for (int x = -20; x <= 20; x++) {
+		for (int y = -20; y <= 20; y++) {
 
-	_renderables.push_back(monkey);
+			RenderObject monkey;
+			monkey.mesh = get_mesh("monkey");
+			monkey.material = get_material("defaultmesh");
+			glm::mat4 translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(x, 5, y-10));
+			glm::mat4 scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(0.2, 0.2, 0.2));
+			monkey.transformMatrix = translation * scale;
 
-	RenderObject monkey2;
-	monkey2.mesh = get_mesh("monkey");
-	monkey2.material = get_material("defaultmesh");
-
-	_renderables.push_back(monkey2);
+			_renderables.push_back(monkey);
+		}
+	}
 }
 
 Material* VulkanEngine::create_material(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name)
@@ -1407,7 +1409,7 @@ void VulkanEngine::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t i
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 
-	updateUniformBuffer(commandBuffer, imageIndex, _renderables.data(), _renderables.size());
+	updateScene(commandBuffer, imageIndex, _renderables.data(), _renderables.size());
 
 	vkCmdEndRenderPass(commandBuffer);
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
@@ -1498,7 +1500,7 @@ void VulkanEngine::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSi
 	vkFreeCommandBuffers(device, transferCommandPool, 1, &commandBuffer);
 }
 
-void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t currentImage, RenderObject* first, int count)
+void VulkanEngine::updateScene(VkCommandBuffer commandBuffer, uint32_t currentImage, RenderObject* first, int count)
 {
 
 	static auto startTime = std::chrono::high_resolution_clock::now();
@@ -1506,33 +1508,13 @@ void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t c
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-	UniformBufferObject ubo{};
-	ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::vec3 camPos = { 0.f,-6.f,-10.f };
 
-	ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
-
-	ubo.proj[1][1] *= -1;
-
-
-
-
-
-	glm::vec3 camPos = { 0.f,0.f,-2.f };
-
-	glm::mat4 view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::mat4 view = glm::translate(glm::mat4(1.f), camPos);
 	//camera projection
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(70.f), 1700.f / 900.f, 0.1f, 200.0f);
 	projection[1][1] *= -1;
-	//model rotation
-	glm::mat4 model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-	//calculate final mesh matrix
-	glm::mat4 mesh_matrix = projection * view * model;
-	VulkanEngine::_constants.render_matrix = mesh_matrix;
-
-
 
 	Mesh* lastMesh = nullptr;
 	Material* lastMaterial = nullptr;
@@ -1546,11 +1528,19 @@ void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t c
 			lastMaterial = object.material;
 		}
 
-		vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &_constants);
+		glm::mat4 model = object.transformMatrix;
+
+		//final render matrix, that we are calculating on the cpu
+		glm::mat4 mesh_matrix = projection * view * model;
+
+		MeshPushConstants constants;
+		constants.render_matrix = mesh_matrix;
+
+		vkCmdPushConstants(commandBuffer, object.material->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
 
 		//only bind the mesh if it's a different one from last bind
 		if (object.mesh != lastMesh) {
-			VkBuffer vertexBuffers[] = {  object.mesh->vertexBuffer };
+			VkBuffer vertexBuffers[] = { object.mesh->vertexBuffer };
 			VkDeviceSize offsets[] = { 0 };
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
@@ -1560,11 +1550,12 @@ void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t c
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentImage], 0, nullptr);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
 
+		UniformBufferObject ubo{};
+		void* data;
+		vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
+		memcpy(data, &ubo, sizeof(ubo));
+		vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
 	}
-	void* data;
-	vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
-	memcpy(data, &ubo, sizeof(ubo));
-	vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
 }
 
 void VulkanEngine::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
