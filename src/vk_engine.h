@@ -216,6 +216,9 @@ private:
 
 	Mesh _mesh;
 
+	float alien_x = 0;
+	float alien_y = 0;
+
 	bool loadShaderModule(const char* filePath, VkShaderModule* outShaderModule);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);

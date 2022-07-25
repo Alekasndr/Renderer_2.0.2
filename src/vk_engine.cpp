@@ -116,6 +116,23 @@ void VulkanEngine::mainLoop()
 						selectedShader = 0;
 					}
 				}
+
+				switch (event.key.keysym.sym) {
+				case SDLK_LEFT:
+					alien_x += 0.1f;
+					break;
+				case SDLK_RIGHT:
+					alien_x -= 0.1f;
+					break;
+				case SDLK_UP:
+					alien_y -= 0.1f;
+					break;
+				case SDLK_DOWN:
+					alien_y += 0.1f;
+					break;
+				default:
+					break;
+				}
 			}
 
 		}
@@ -650,6 +667,8 @@ void VulkanEngine::createGraphicsPipeline()
 	//build the red triangle pipeline
 	secondGraphicsPipeline = pipelineBuilder.buildPipeline(device, renderPass);
 
+	create_material(secondGraphicsPipeline, pipelineLayout, "bluemesh");
+
 	vkDestroyShaderModule(device, fragShaderModule, nullptr);
 	vkDestroyShaderModule(device, vertShaderModule, nullptr);
 	vkDestroyShaderModule(device, secondFragShaderModule, nullptr);
@@ -1146,8 +1165,15 @@ void VulkanEngine::initScene()
 
 			RenderObject monkey;
 			monkey.mesh = get_mesh("monkey");
-			monkey.material = get_material("defaultmesh");
-			glm::mat4 translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(x, 5, y-10));
+			if (x % 2 == 0) {
+				monkey.material = get_material("defaultmesh");
+
+			}
+			else
+			{
+				monkey.material = get_material("bluemesh");
+			}
+			glm::mat4 translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(x, 5, y - 10));
 			glm::mat4 scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(0.2, 0.2, 0.2));
 			monkey.transformMatrix = translation * scale;
 
@@ -1509,7 +1535,7 @@ void VulkanEngine::updateScene(VkCommandBuffer commandBuffer, uint32_t currentIm
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
 
-	glm::vec3 camPos = { 0.f,-6.f,-10.f };
+	glm::vec3 camPos = { 0.f + alien_x,-6.f + alien_y,-10.f };
 
 	glm::mat4 view = glm::translate(glm::mat4(1.f), camPos);
 	//camera projection
