@@ -119,22 +119,26 @@ void VulkanEngine::mainLoop()
 
 				switch (event.key.keysym.sym) {
 				case SDLK_LEFT:
-					alien_x += 0.1f;
+					alien_x += 0.05f;
 					break;
 				case SDLK_RIGHT:
-					alien_x -= 0.1f;
+					alien_x -= 0.05f;
 					break;
 				case SDLK_UP:
-					alien_y -= 0.1f;
+					alien_y -= 0.05f;
 					break;
 				case SDLK_DOWN:
-					alien_y += 0.1f;
+					alien_y += 0.05f;
 					break;
+				case SDLK_w:
+					alien_z += 0.05f;
+					break;
+				case SDLK_s:
+					alien_z -= 0.05f;
 				default:
 					break;
 				}
 			}
-
 		}
 
 		++frame_counter;
@@ -1534,8 +1538,7 @@ void VulkanEngine::updateScene(VkCommandBuffer commandBuffer, uint32_t currentIm
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-
-	glm::vec3 camPos = { 0.f + alien_x,-6.f + alien_y,-10.f };
+	glm::vec3 camPos = { 0.f + alien_x,-6.f + alien_y,-10.f + alien_z };
 
 	glm::mat4 view = glm::translate(glm::mat4(1.f), camPos);
 	//camera projection
