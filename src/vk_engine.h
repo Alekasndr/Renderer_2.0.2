@@ -35,6 +35,11 @@ struct UniformBufferObject {
 	alignas(16) glm::mat4 proj;
 };
 
+struct MeshPushConstants {
+	alignas(16) glm::vec4 data;
+	alignas(16) glm::mat4 render_matrix;
+};
+
 struct Material {
 	VkPipeline pipeline;
 	VkPipelineLayout pipelineLayout;
@@ -107,11 +112,6 @@ private:
 
 	//returns nullptr if it can't be found
 	Mesh* get_mesh(const std::string& name);
-
-	//our draw function
-	void draw_objects(VkCommandBuffer cmd, RenderObject* first, int count);
-
-
 
 	SDL_Window* window;
 
@@ -214,6 +214,7 @@ private:
 	DeletionQueue afterRecreateDeletionQueue;
 
 	Mesh _mesh;
+	MeshPushConstants _constants;
 
 	bool loadShaderModule(const char* filePath, VkShaderModule* outShaderModule);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);

@@ -589,11 +589,17 @@ void VulkanEngine::createGraphicsPipeline()
 		std::cout << "VulkanEngine: Error when building fragment shader module" << std::endl;
 	}
 
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo = vkinit::pipelineLayoutCreateInfo(&descriptorSetLayout);
+	VkPushConstantRange push_constant;
+	push_constant.offset = 0;
+	//this push constant range takes up the size of a MeshPushConstants struct
+	push_constant.size = sizeof(MeshPushConstants);
+	//this push constant range is accessible only in the vertex shader
+	push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo = vkinit::pipelineLayoutCreateInfo(&descriptorSetLayout, push_constant);
 	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to create pipeline layout!");
 	}
-
 
 	PipelineBuilder pipelineBuilder;
 
@@ -1509,6 +1515,25 @@ void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t c
 
 	ubo.proj[1][1] *= -1;
 
+
+
+
+
+	glm::vec3 camPos = { 0.f,0.f,-2.f };
+
+	glm::mat4 view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	//camera projection
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+	projection[1][1] *= -1;
+	//model rotation
+	glm::mat4 model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+	//calculate final mesh matrix
+	glm::mat4 mesh_matrix = projection * view * model;
+	VulkanEngine::_constants.render_matrix = mesh_matrix;
+
+
+
 	Mesh* lastMesh = nullptr;
 	Material* lastMaterial = nullptr;
 	for (int i = 0; i < count; i++)
@@ -1520,6 +1545,8 @@ void VulkanEngine::updateUniformBuffer(VkCommandBuffer commandBuffer, uint32_t c
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipeline);
 			lastMaterial = object.material;
 		}
+
+		vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &_constants);
 
 		//only bind the mesh if it's a different one from last bind
 		if (object.mesh != lastMesh) {
