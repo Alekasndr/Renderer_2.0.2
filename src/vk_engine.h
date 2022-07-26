@@ -113,18 +113,13 @@ private:
 
 	void initScene();
 
-
 	std::vector<RenderObject> _renderables;
 
 	std::unordered_map<std::string, Material> _materials;
 	std::unordered_map<std::string, Mesh> _meshes;
-	//functions
 
-	//create material and add it to the map
 	Material* createMaterial(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name);
-	//returns nullptr if it can't be found
 	Material* getMaterial(const std::string& name);
-	//returns nullptr if it can't be found
 	Mesh* getMesh(const std::string& name);
 
 	SDL_Window* window;
@@ -191,9 +186,6 @@ private:
 	};
 
 	QueueFamilyIndices queueIndices;
-
-	const uint32_t WIDTH = 800;
-	const uint32_t HEIGHT = 600;
 
 	const std::string MODEL_PATH = "../../models/monkey_smooth.obj";
 	const std::string TEXTURE_PATH = "../../models/123.jpg";
