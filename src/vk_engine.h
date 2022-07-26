@@ -136,9 +136,6 @@ private:
 	VkRenderPass renderPass;
 
 	VkDescriptorSetLayout descriptorSetLayout;
-	VkPipelineLayout pipelineLayout;
-	VkPipeline graphicsPipeline;
-	VkPipeline secondGraphicsPipeline;
 
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 

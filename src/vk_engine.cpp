@@ -617,6 +617,8 @@ void VulkanEngine::createGraphicsPipeline()
 	//this push constant range is accessible only in the vertex shader
 	push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
+	VkPipelineLayout pipelineLayout;
+
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = vkinit::pipelineLayoutCreateInfo(&descriptorSetLayout, push_constant);
 	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
 		throw std::runtime_error("VulkanEngine: Failed to create pipeline layout!");
@@ -654,7 +656,7 @@ void VulkanEngine::createGraphicsPipeline()
 
 	pipelineBuilder.pipelineLayout = pipelineLayout;
 
-	graphicsPipeline = pipelineBuilder.buildPipeline(device, renderPass);
+	VkPipeline graphicsPipeline = pipelineBuilder.buildPipeline(device, renderPass);
 
 	create_material(graphicsPipeline, pipelineLayout, "defaultmesh");
 
@@ -669,7 +671,7 @@ void VulkanEngine::createGraphicsPipeline()
 		vkinit::pipelineShaderStageCreateInfo(VK_SHADER_STAGE_FRAGMENT_BIT, secondFragShaderModule));
 
 	//build the red triangle pipeline
-	secondGraphicsPipeline = pipelineBuilder.buildPipeline(device, renderPass);
+	VkPipeline secondGraphicsPipeline = pipelineBuilder.buildPipeline(device, renderPass);
 
 	create_material(secondGraphicsPipeline, pipelineLayout, "bluemesh");
 
@@ -1576,7 +1578,7 @@ void VulkanEngine::updateScene(VkCommandBuffer commandBuffer, uint32_t currentIm
 			vkCmdBindIndexBuffer(commandBuffer, object.mesh->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 		}
 
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentImage], 0, nullptr);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelineLayout, 0, 1, &descriptorSets[currentImage], 0, nullptr);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
 
 		UniformBufferObject ubo{};
