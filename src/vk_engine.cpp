@@ -72,7 +72,6 @@ void VulkanEngine::initVulkan()
 	createColorResources();
 	createDepthResources();
 	createFramebuffers();
-	createTextureImage();
 	createTextureImageView();
 	createTextureSampler();
 	loadModel();
@@ -1009,7 +1008,7 @@ void VulkanEngine::createDescriptorSets()
 
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = textureImageView;
+		imageInfo.imageView = _loadedTextures["empire_diffuse"].textureImageView;
 		imageInfo.sampler = textureSampler;
 
 		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
@@ -1034,7 +1033,7 @@ void VulkanEngine::createDescriptorSets()
 	}
 }
 
-void VulkanEngine::createTextureImage()
+void VulkanEngine::createTextureImage(VkImage &textureImage, VkDeviceMemory &textureImageMemory)
 {
 	int texWidth, texHeight, texChannels;
 	stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -1075,12 +1074,16 @@ void VulkanEngine::createTextureImage()
 
 void VulkanEngine::createTextureImageView()
 {
-	textureImageView = createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels);
+	Texture lostEmpire;
+	createTextureImage(lostEmpire.textureImage, lostEmpire.textureImageMemory);
+	lostEmpire.textureImageView = createImageView(lostEmpire.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels);
 
 	std::cout << "VulkanEngine: Texture image view seccessfully created" << std::endl;
 
+	_loadedTextures["empire_diffuse"] = lostEmpire;
+
 	mainDeletionQueue.push_function([=]() {
-		vkDestroyImageView(device, textureImageView, nullptr);
+		vkDestroyImageView(device, lostEmpire.textureImageView, nullptr);
 		});
 }
 

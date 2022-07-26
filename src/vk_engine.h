@@ -44,6 +44,12 @@ struct Material {
 	VkPipelineLayout pipelineLayout;
 };
 
+struct Texture {
+	VkImageView textureImageView;
+	VkImage textureImage;
+	VkDeviceMemory textureImageMemory;
+};
+
 struct RenderObject {
 	Mesh* mesh;
 	Material* material;
@@ -104,7 +110,7 @@ private:
 	void createDescriptorSetLayout();
 	void createDescriptorPool();
 	void createDescriptorSets();
-	void createTextureImage();
+	void createTextureImage(VkImage& textureImage, VkDeviceMemory& textureImageMemory);
 	void createTextureImageView();
 	void createTextureSampler();
 	void createDepthResources();
@@ -117,6 +123,7 @@ private:
 
 	std::unordered_map<std::string, Material> _materials;
 	std::unordered_map<std::string, Mesh> _meshes;
+	std::unordered_map<std::string, Texture> _loadedTextures;
 
 	Material* createMaterial(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name);
 	Material* getMaterial(const std::string& name);
@@ -166,9 +173,6 @@ private:
 	VkDeviceMemory stagingBufferMemory;
 
 	uint32_t mipLevels;
-	VkImage textureImage;
-	VkDeviceMemory textureImageMemory;
-	VkImageView textureImageView;
 	VkSampler textureSampler;
 
 	VkImage depthImage;
