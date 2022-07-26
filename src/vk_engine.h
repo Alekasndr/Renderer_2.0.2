@@ -84,50 +84,48 @@ private:
 	void drawFrame();
 
 	void createInstance();
-	bool checkValidationLayerSupport();
-	std::vector<const char*> getRequiredExtensions();
 	void setupDebugMessenger();
+	void createSurface();
 	void pickPhysicalDevice();
 	void createLogicalDevice();
-	void createSurface();
 	void createSwapChain();
 	void createImageViews();
 	void createRenderPass();
-
+	void createDescriptorSetLayout();
 	void createGraphicsPipeline();
-
-	void createFramebuffers();
 	void createCommandPool();
+	void createColorResources();
+	void createDepthResources();
+	void createFramebuffers();
+	void createTextureImageView();
+	void createTextureSampler();
+	void loadModel();
+	void createUniformBuffers();
+	void createDescriptorPool();
+	void createDescriptorSets();
 	void createCommandBuffers();
 	void createSyncObjects();
+	void initScene();
+
+	bool checkValidationLayerSupport();
+	std::vector<const char*> getRequiredExtensions();
 	void recreateSwapChain();
 	void cleanupSwapChain();
 
 	void createVertexBuffer(Mesh& mesh);
 	void createIndexBuffer(Mesh& mesh);
-
-	void createUniformBuffers();
-	void createDescriptorSetLayout();
-	void createDescriptorPool();
-	void createDescriptorSets();
 	void createTextureImage(VkImage& textureImage, VkDeviceMemory& textureImageMemory);
-	void createTextureImageView();
-	void createTextureSampler();
-	void createDepthResources();
-	void loadModel();
-	void createColorResources();
-
-	void initScene();
-
-	std::vector<RenderObject> _renderables;
-
-	std::unordered_map<std::string, Material> _materials;
-	std::unordered_map<std::string, Mesh> _meshes;
-	std::unordered_map<std::string, Texture> _loadedTextures;
 
 	Material* createMaterial(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name);
 	Material* getMaterial(const std::string& name);
 	Mesh* getMesh(const std::string& name);
+
+
+	std::vector<RenderObject> _renderables;
+	std::unordered_map<std::string, Material> _materials;
+	std::unordered_map<std::string, Mesh> _meshes;
+	std::unordered_map<std::string, Texture> _loadedTextures;
+
 
 	SDL_Window* window;
 
@@ -232,7 +230,6 @@ private:
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 	VkFormat findDepthFormat();
-	bool hasStencilComponent(VkFormat format);
 	VkSampleCountFlagBits getMaxUsableSampleCount();
 	void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 };
