@@ -197,15 +197,9 @@ void VulkanEngine::drawFrame()
 	}
 
 	vkResetFences(device, 1, &inFlightFences[currentFrame]);
-
 	vkResetCommandBuffer(commandBuffers[currentFrame], 0);
 
 	recordCommandBuffer(commandBuffers[currentFrame], currentFrame);
-
-
-	/// <summary>
-	/// 
-	/// </summary>
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -658,7 +652,7 @@ void VulkanEngine::createGraphicsPipeline()
 
 	VkPipeline graphicsPipeline = pipelineBuilder.buildPipeline(device, renderPass);
 
-	create_material(graphicsPipeline, pipelineLayout, "defaultmesh");
+	createMaterial(graphicsPipeline, pipelineLayout, "defaultmesh");
 
 	//clear the shader stages for the builder
 	pipelineBuilder.shaderStages.clear();
@@ -673,7 +667,7 @@ void VulkanEngine::createGraphicsPipeline()
 	//build the red triangle pipeline
 	VkPipeline secondGraphicsPipeline = pipelineBuilder.buildPipeline(device, renderPass);
 
-	create_material(secondGraphicsPipeline, pipelineLayout, "bluemesh");
+	createMaterial(secondGraphicsPipeline, pipelineLayout, "bluemesh");
 
 	vkDestroyShaderModule(device, fragShaderModule, nullptr);
 	vkDestroyShaderModule(device, vertShaderModule, nullptr);
@@ -920,7 +914,7 @@ void VulkanEngine::createIndexBuffer(Mesh& mesh)
 
 void VulkanEngine::createUniformBuffers()
 {
-	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+	VkDeviceSize bufferSize = sizeof(GPUCameraData);
 
 	uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 	uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1011,7 +1005,7 @@ void VulkanEngine::createDescriptorSets()
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = uniformBuffers[i];
 		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(UniformBufferObject);
+		bufferInfo.range = sizeof(GPUCameraData);
 
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -1170,14 +1164,14 @@ void VulkanEngine::initScene()
 		for (int y = -20; y <= 20; y++) {
 
 			RenderObject monkey;
-			monkey.mesh = get_mesh("monkey");
+			monkey.mesh = getMesh("monkey");
 			if (x % 2 == 0) {
-				monkey.material = get_material("defaultmesh");
+				monkey.material = getMaterial("defaultmesh");
 
 			}
 			else
 			{
-				monkey.material = get_material("bluemesh");
+				monkey.material = getMaterial("bluemesh");
 			}
 			glm::mat4 translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(x, 5, y - 10));
 			glm::mat4 scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(0.2, 0.2, 0.2));
@@ -1188,7 +1182,7 @@ void VulkanEngine::initScene()
 	}
 }
 
-Material* VulkanEngine::create_material(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name)
+Material* VulkanEngine::createMaterial(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name)
 {
 	Material mat;
 	mat.pipeline = pipeline;
@@ -1197,7 +1191,7 @@ Material* VulkanEngine::create_material(VkPipeline pipeline, VkPipelineLayout la
 	return &_materials[name];
 }
 
-Material* VulkanEngine::get_material(const std::string& name)
+Material* VulkanEngine::getMaterial(const std::string& name)
 {
 	auto it = _materials.find(name);
 	if (it == _materials.end()) {
@@ -1208,7 +1202,7 @@ Material* VulkanEngine::get_material(const std::string& name)
 	}
 }
 
-Mesh* VulkanEngine::get_mesh(const std::string& name)
+Mesh* VulkanEngine::getMesh(const std::string& name)
 {
 	auto it = _meshes.find(name);
 	if (it == _meshes.end()) {
@@ -1256,7 +1250,7 @@ void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
 	createInfo.pfnUserCallback = debugCallback;
 }
 
-VulkanEngine::QueueFamilyIndices VulkanEngine::findQueueFamilies(VkPhysicalDevice device)
+QueueFamilyIndices VulkanEngine::findQueueFamilies(VkPhysicalDevice device)
 {
 	QueueFamilyIndices indices;
 
@@ -1287,7 +1281,7 @@ VulkanEngine::QueueFamilyIndices VulkanEngine::findQueueFamilies(VkPhysicalDevic
 	return indices;
 }
 
-VulkanEngine::SwapChainSupportDetails VulkanEngine::querySwapChainSupport(VkPhysicalDevice device)
+SwapChainSupportDetails VulkanEngine::querySwapChainSupport(VkPhysicalDevice device)
 {
 	SwapChainSupportDetails details;
 
@@ -1440,7 +1434,6 @@ void VulkanEngine::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t i
 	scissor.extent = swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-
 	updateScene(commandBuffer, imageIndex, _renderables.data(), _renderables.size());
 
 	vkCmdEndRenderPass(commandBuffer);
@@ -1534,7 +1527,6 @@ void VulkanEngine::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSi
 
 void VulkanEngine::updateScene(VkCommandBuffer commandBuffer, uint32_t currentImage, RenderObject* first, int count)
 {
-
 	static auto startTime = std::chrono::high_resolution_clock::now();
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
@@ -1546,6 +1538,15 @@ void VulkanEngine::updateScene(VkCommandBuffer commandBuffer, uint32_t currentIm
 	//camera projection
 	glm::mat4 projection = glm::perspective(glm::radians(70.f), 1700.f / 900.f, 0.1f, 200.0f);
 	projection[1][1] *= -1;
+
+	GPUCameraData camData;
+	camData.proj = projection;
+	camData.view = view;
+	camData.viewproj = projection * view;
+	void* data;
+	vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(camData), 0, &data);
+	memcpy(data, &camData, sizeof(camData));
+	vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
 
 	Mesh* lastMesh = nullptr;
 	Material* lastMaterial = nullptr;
@@ -1559,13 +1560,8 @@ void VulkanEngine::updateScene(VkCommandBuffer commandBuffer, uint32_t currentIm
 			lastMaterial = object.material;
 		}
 
-		glm::mat4 model = object.transformMatrix;
-
-		//final render matrix, that we are calculating on the cpu
-		glm::mat4 mesh_matrix = projection * view * model;
-
 		MeshPushConstants constants;
-		constants.render_matrix = mesh_matrix;
+		constants.render_matrix = object.transformMatrix;
 
 		vkCmdPushConstants(commandBuffer, object.material->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
 
@@ -1580,12 +1576,6 @@ void VulkanEngine::updateScene(VkCommandBuffer commandBuffer, uint32_t currentIm
 
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelineLayout, 0, 1, &descriptorSets[currentImage], 0, nullptr);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
-
-		UniformBufferObject ubo{};
-		void* data;
-		vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
-		memcpy(data, &ubo, sizeof(ubo));
-		vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
 	}
 }
 

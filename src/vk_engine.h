@@ -8,7 +8,6 @@
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 
-
 class SDL_Window;
 
 struct DeletionQueue
@@ -29,10 +28,10 @@ struct DeletionQueue
 	}
 };
 
-struct UniformBufferObject {
-	alignas(16) glm::mat4 model;
+struct GPUCameraData {
 	alignas(16) glm::mat4 view;
 	alignas(16) glm::mat4 proj;
+	alignas(16) glm::mat4 viewproj;
 };
 
 struct MeshPushConstants {
@@ -50,6 +49,22 @@ struct RenderObject {
 	Material* material;
 
 	glm::mat4 transformMatrix;
+};
+
+struct QueueFamilyIndices {
+	std::optional<uint32_t> graphicsFamily;
+	std::optional<uint32_t> presentFamily;
+	std::optional<uint32_t> transferFamily;
+
+	bool isComplete() {
+		return graphicsFamily.has_value() && presentFamily.has_value() && transferFamily.has_value();
+	}
+};
+
+struct SwapChainSupportDetails {
+	VkSurfaceCapabilitiesKHR capabilities;
+	std::vector<VkSurfaceFormatKHR> formats;
+	std::vector<VkPresentModeKHR> presentModes;
 };
 
 class VulkanEngine {
@@ -106,13 +121,11 @@ private:
 	//functions
 
 	//create material and add it to the map
-	Material* create_material(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name);
-
+	Material* createMaterial(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name);
 	//returns nullptr if it can't be found
-	Material* get_material(const std::string& name);
-
+	Material* getMaterial(const std::string& name);
 	//returns nullptr if it can't be found
-	Mesh* get_mesh(const std::string& name);
+	Mesh* getMesh(const std::string& name);
 
 	SDL_Window* window;
 
@@ -177,22 +190,7 @@ private:
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
 
-	struct QueueFamilyIndices {
-		std::optional<uint32_t> graphicsFamily;
-		std::optional<uint32_t> presentFamily;
-		std::optional<uint32_t> transferFamily;
-
-		bool isComplete() {
-			return graphicsFamily.has_value() && presentFamily.has_value() && transferFamily.has_value();
-		}
-	};
 	QueueFamilyIndices queueIndices;
-
-	struct SwapChainSupportDetails {
-		VkSurfaceCapabilitiesKHR capabilities;
-		std::vector<VkSurfaceFormatKHR> formats;
-		std::vector<VkPresentModeKHR> presentModes;
-	};
 
 	const uint32_t WIDTH = 800;
 	const uint32_t HEIGHT = 600;
