@@ -1,54 +1,131 @@
 #pragma once
-#include <vector>
 #include <optional>
 #include <string>
-#include "Vertex.h"
-#include "UniformBufferObject.h"
+#include <vk_types.h>
+#include <vk_mesh.h>
+
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#include <glm/glm.hpp>
 
 class SDL_Window;
 
-class Vulkan {
+struct DeletionQueue
+{
+	std::list<std::function<void()>> deletors;
+
+	void push_function(std::function<void()>&& function) {
+		deletors.push_back(function);
+	}
+
+	void flush() {
+		// reverse iterate the deletion queue to execute all the functions
+		for (auto it = deletors.rbegin(); it != deletors.rend(); it++) {
+			(*it)(); //call the function
+		}
+
+		deletors.clear();
+	}
+};
+
+struct GPUCameraData {
+	alignas(16) glm::mat4 view;
+	alignas(16) glm::mat4 proj;
+	alignas(16) glm::mat4 viewproj;
+};
+
+struct MeshPushConstants {
+	alignas(16) glm::vec4 data;
+	alignas(16) glm::mat4 render_matrix;
+};
+
+struct Material {
+	VkPipeline pipeline;
+	VkPipelineLayout pipelineLayout;
+};
+
+struct Texture {
+	VkImageView textureImageView;
+	VkImage textureImage;
+	VkDeviceMemory textureImageMemory;
+};
+
+struct RenderObject {
+	Mesh* mesh;
+	Material* material;
+
+	glm::mat4 transformMatrix;
+};
+
+struct QueueFamilyIndices {
+	std::optional<uint32_t> graphicsFamily;
+	std::optional<uint32_t> presentFamily;
+	std::optional<uint32_t> transferFamily;
+
+	bool isComplete() {
+		return graphicsFamily.has_value() && presentFamily.has_value() && transferFamily.has_value();
+	}
+};
+
+struct SwapChainSupportDetails {
+	VkSurfaceCapabilitiesKHR capabilities;
+	std::vector<VkSurfaceFormatKHR> formats;
+	std::vector<VkPresentModeKHR> presentModes;
+};
+
+class VulkanEngine {
 public:
-	void run();
-
-private:
-	static std::vector<char> readFile(const std::string& filename);
-
 	void initWindow();
-	void initVulkan();
 	void mainLoop();
 	void cleanup();
+
+private:
+	void initVulkan();
 	void drawFrame();
 
 	void createInstance();
-	bool checkValidationLayerSupport();
-	std::vector<const char*> getRequiredExtensions();
 	void setupDebugMessenger();
+	void createSurface();
 	void pickPhysicalDevice();
 	void createLogicalDevice();
-	void createSurface();
 	void createSwapChain();
 	void createImageViews();
 	void createRenderPass();
-	void createGraphicsPipeline();
-	void createFramebuffers();
-	void createCommandPool();
-	void createCommandBuffers();
-	void createSyncObjects();
-	void recreateSwapChain();
-	void cleanupSwapChain();
-	void createVertexBuffer();
-	void createIndexBuffer();
-	void createUniformBuffers();
 	void createDescriptorSetLayout();
-	void createDescriptorPool();
-	void createDescriptorSets();
-	void createTextureImage();
+	void createGraphicsPipeline();
+	void createCommandPool();
+	void createColorResources();
+	void createDepthResources();
+	void createFramebuffers();
 	void createTextureImageView();
 	void createTextureSampler();
-	void createDepthResources();
 	void loadModel();
-	void createColorResources();
+	void createUniformBuffers();
+	void createDescriptorPool();
+	void createDescriptorSets();
+	void createCommandBuffers();
+	void createSyncObjects();
+	void initScene();
+
+	bool checkValidationLayerSupport();
+	std::vector<const char*> getRequiredExtensions();
+	void recreateSwapChain();
+	void cleanupSwapChain();
+
+	void createVertexBuffer(Mesh& mesh);
+	void createIndexBuffer(Mesh& mesh);
+	void createTextureImage(VkImage& textureImage, VkDeviceMemory& textureImageMemory);
+
+	Material* createMaterial(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name);
+	Material* getMaterial(const std::string& name);
+	Mesh* getMesh(const std::string& name);
+
+
+	std::vector<RenderObject> _renderables;
+	std::unordered_map<std::string, Material> _materials;
+	std::unordered_map<std::string, Mesh> _meshes;
+	std::unordered_map<std::string, Texture> _loadedTextures;
+
 
 	SDL_Window* window;
 
@@ -72,20 +149,12 @@ private:
 	VkRenderPass renderPass;
 
 	VkDescriptorSetLayout descriptorSetLayout;
-	VkPipelineLayout pipelineLayout;
-	VkPipeline graphicsPipeline;
 
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 
 	VkCommandPool commandPool;
 	VkCommandPool transferCommandPool;
 	std::vector<VkCommandBuffer> commandBuffers;
-
-	VkBuffer vertexBuffer;
-	VkDeviceMemory vertexBufferMemory;
-
-	VkBuffer indexBuffer;
-	VkDeviceMemory indexBufferMemory;
 
 	std::vector<VkBuffer> uniformBuffers;
 	std::vector<VkDeviceMemory> uniformBuffersMemory;
@@ -102,9 +171,6 @@ private:
 	VkDeviceMemory stagingBufferMemory;
 
 	uint32_t mipLevels;
-	VkImage textureImage;
-	VkDeviceMemory textureImageMemory;
-	VkImageView textureImageView;
 	VkSampler textureSampler;
 
 	VkImage depthImage;
@@ -121,38 +187,29 @@ private:
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
 
-	struct QueueFamilyIndices {
-		std::optional<uint32_t> graphicsFamily;
-		std::optional<uint32_t> presentFamily;
-		std::optional<uint32_t> transferFamily;
-
-		bool isComplete() {
-			return graphicsFamily.has_value() && presentFamily.has_value() && transferFamily.has_value();
-		}
-	};
 	QueueFamilyIndices queueIndices;
 
-	struct SwapChainSupportDetails {
-		VkSurfaceCapabilitiesKHR capabilities;
-		std::vector<VkSurfaceFormatKHR> formats;
-		std::vector<VkPresentModeKHR> presentModes;
-	};
-
-	std::vector<Vertex> vertices;
-	std::vector<uint32_t> indices;
-
-	const uint32_t WIDTH = 800;
-	const uint32_t HEIGHT = 600;
-
-	const std::string MODEL_PATH = "../../models/viking_room.obj";
-	const std::string TEXTURE_PATH = "../../models/viking_room.png";
+	const std::string MODEL_PATH = "../../models/monkey_smooth.obj";
+	const std::string TEXTURE_PATH = "../../models/123.jpg";
 
 	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 	VkImage colorImage;
 	VkDeviceMemory colorImageMemory;
 	VkImageView colorImageView;
 
-	VkShaderModule createShaderModule(const std::vector<char>& code);
+	int selectedShader = 0;
+
+	DeletionQueue recreateDeletionQueue;
+	DeletionQueue mainDeletionQueue;
+	DeletionQueue afterRecreateDeletionQueue;
+
+	Mesh _mesh;
+
+	float alien_x = 0;
+	float alien_y = 0;
+	float alien_z = 0;
+
+	bool loadShaderModule(const char* filePath, VkShaderModule* outShaderModule);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 	int rateDeviceSuitability(VkPhysicalDevice device);
@@ -164,7 +221,7 @@ private:
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-	void updateUniformBuffer(uint32_t currentImage);
+	void updateScene(VkCommandBuffer commandBuffer, uint32_t currentImage, RenderObject* first, int count);
 	void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
@@ -173,7 +230,6 @@ private:
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 	VkFormat findDepthFormat();
-	bool hasStencilComponent(VkFormat format);
-	void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 	VkSampleCountFlagBits getMaxUsableSampleCount();
+	void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 };
