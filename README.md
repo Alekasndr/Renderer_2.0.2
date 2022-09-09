@@ -9,3 +9,5 @@ $cmake --build . --config Release<br />
 
 This rendering engine is possible to render different models with different shader.
 ![image](https://user-images.githubusercontent.com/39558743/189301087-f5fd6e0a-194e-43e4-8f8c-9c5fa4b2c7b5.png)
+![image](https://user-images.githubusercontent.com/39558743/189303157-28777d62-9b0e-4e32-981a-e91ef3e1e4e8.png)
+
