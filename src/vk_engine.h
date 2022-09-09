@@ -192,6 +192,8 @@ private:
 	const std::string MODEL_PATH = "../../models/monkey_smooth.obj";
 	const std::string TEXTURE_PATH = "../../models/123.jpg";
 
+	const std::string MODEL_PATH1 = "../../models/Tiger_I.obj";
+
 	VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 	VkImage colorImage;
 	VkDeviceMemory colorImageMemory;
@@ -204,6 +206,7 @@ private:
 	DeletionQueue afterRecreateDeletionQueue;
 
 	Mesh _mesh;
+	Mesh _mesh2;
 
 	float alien_x = 0;
 	float alien_y = 0;

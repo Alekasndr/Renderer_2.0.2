@@ -1545,6 +1545,13 @@ void VulkanEngine::loadModel()
 	createIndexBuffer(_mesh);
 
 	_meshes["monkey"] = _mesh;
+
+	_mesh2.load_from_obj(MODEL_PATH1.c_str());
+
+	createVertexBuffer(_mesh2);
+	createIndexBuffer(_mesh2);
+
+	_meshes["tank"] = _mesh2;
 }
 
 void VulkanEngine::createVertexBuffer(Mesh& mesh)
@@ -1771,24 +1778,37 @@ void VulkanEngine::createSyncObjects()
 void VulkanEngine::initScene()
 {
 	for (int x = -20; x <= 20; x++) {
-		for (int y = -20; y <= 20; y++) {
-
-			RenderObject monkey;
-			monkey.mesh = getMesh("monkey");
-			if (x % 2 == 0) {
+		RenderObject monkey;
+		RenderObject tank;
+		monkey.mesh = getMesh("monkey");
+		tank.mesh = getMesh("tank");
+		if (x % 2 == 0) {
+			monkey.material = getMaterial("bluemesh");
+			if (x % 3 == 0) {
 				monkey.material = getMaterial("defaultmesh");
 
 			}
-			else
-			{
-				monkey.material = getMaterial("bluemesh");
-			}
-			glm::mat4 translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(x, 5, y - 10));
+			glm::mat4 translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(x, 5, 8));
 			glm::mat4 scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(0.2, 0.2, 0.2));
 			monkey.transformMatrix = translation * scale;
 
 			_renderables.push_back(monkey);
+
 		}
+		else
+		{
+			tank.material = getMaterial("bluemesh");
+			if (x % 3 == 0) {
+				tank.material = getMaterial("defaultmesh");
+
+			}
+			glm::mat4 translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(x, 5, 8));
+			glm::mat4 scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(0.2, 0.2, 0.2));
+			tank.transformMatrix = translation * scale;
+
+			_renderables.push_back(tank);
+		}
+	
 	}
 }
 
