@@ -1,11 +1,14 @@
 # Renderer_2.0.2
 
-How to build this project:
+# How to build this project:
 
 $mkdir build<br />
 $cd build<br />
 $cmake .. -D sdl2_DIR:FILEPATH="Here should be path to SDL2"<br />
 $cmake --build . --config Release<br />
+
+# What system is here
+
 
 This rendering engine is possible to render different models with different shader.
 ![image](https://user-images.githubusercontent.com/39558743/189305020-24b85122-d322-4066-96c1-c6a6a8dab5dd.png)
