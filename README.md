@@ -8,6 +8,12 @@ $cmake .. -D sdl2_DIR:FILEPATH="Here should be path to SDL2"<br />
 $cmake --build . --config Release<br />
 
 # What system is here
+Resizeble window and recreating rendering.
+Push constants.
+Mesh factory.
+Material system wich can use different shaders.
+Multisampling.
+Generating Mipmaps.
 
 
 This rendering engine is possible to render different models with different shader.
