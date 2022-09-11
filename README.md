@@ -9,11 +9,11 @@ $cmake --build . --config Release<br />
 
 # What system is here
 Cmake for build.<br />
-SDL 2 for cross platform window.<br />
+SDL 2 for cross-platform window.<br />
 Resizeble window and recreating rendering.<br />
 Push constants.<br />
 Mesh factory.<br />
-Material system wich can use different shaders.<br />
+Material system which can use different shaders.<br />
 Multisampling.<br />
 Generating Mipmaps.<br />
 
