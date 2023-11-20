@@ -7,7 +7,7 @@ $cd build<br />
 $cmake .. -D sdl2_DIR:FILEPATH="Here should be path to SDL2"<br />
 $cmake --build . --config Release<br />
 
-# What system is here
+# What systems is here
 Cmake for build.<br />
 SDL 2 for cross-platform window.<br />
 Resizeble window and recreating rendering.<br />
